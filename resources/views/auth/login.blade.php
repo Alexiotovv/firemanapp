@@ -197,7 +197,7 @@
         <!-- Lado izquierdo - Imagen (70%) -->
         <div class="login-image-side">
             <!-- Aquí va tu imagen PNG -->
-            <img src="{{ asset('img/fondo_left.jpeg') }}" alt="Bomberos en acción" class="login-image" >
+            <img src="{{ asset('img/fondo_left3.png') }}" alt="Bomberos en acción" class="login-image" >
             <div class="image-overlay"></div>
             
             <div class="image-content">
