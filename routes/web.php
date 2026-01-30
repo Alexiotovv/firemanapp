@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ParteIncendioController;
+use App\Http\Controllers\ParteEmergenciaController;
 
 // Rutas públicas
 Route::get('/', function () {
@@ -61,4 +62,21 @@ Route::middleware(['auth'])->group(function () {
             return view('admin.settings');
         })->name('admin.settings');
     });
+    
 });
+
+// Rutas para Partes de Emergencias Médicas (las mismas)
+Route::middleware(['auth'])->prefix('partes-emergencias')->name('partes-emergencias.')->group(function () {
+    Route::get('/', [ParteEmergenciaController::class, 'index'])->name('index');
+    Route::get('/create', [ParteEmergenciaController::class, 'create'])->name('create');
+    Route::post('/', [ParteEmergenciaController::class, 'store'])->name('store');
+    Route::get('/{partesEmergencia}', [ParteEmergenciaController::class, 'show'])->name('show');
+    Route::get('/{partesEmergencia}/edit', [ParteEmergenciaController::class, 'edit'])->name('edit');
+    Route::put('/{partesEmergencia}', [ParteEmergenciaController::class, 'update'])->name('update');
+    Route::delete('/{partesEmergencia}', [ParteEmergenciaController::class, 'destroy'])->name('destroy');
+    
+    Route::post('/{partesEmergencia}/completar', [ParteEmergenciaController::class, 'completar'])->name('completar');
+    Route::post('/{partesEmergencia}/aprobar', [ParteEmergenciaController::class, 'aprobar'])->name('aprobar');
+    Route::get('/{partesEmergencia}/imprimir', [ParteEmergenciaController::class, 'imprimir'])->name('imprimir');
+});
+

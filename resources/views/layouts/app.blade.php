@@ -29,11 +29,60 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
+        /* Sidebar responsive */
         .sidebar {
             background-color: var(--dark-bg);
-            min-height: calc(100vh - 56px);
             color: white;
-            width: 250px;
+            height: 100%;
+            transition: all 0.3s;
+        }
+        
+        /* Sidebar oculto en móviles por defecto */
+        @media (max-width: 767.98px) {
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                top: 56px;
+                bottom: 0;
+                width: 250px;
+                z-index: 1040;
+                overflow-y: auto;
+                transition: left 0.3s;
+            }
+            
+            .sidebar.show {
+                left: 0;
+            }
+            
+            /* Overlay para fondo oscuro */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 56px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 1039;
+            }
+            
+            .sidebar-overlay.show {
+                display: block;
+            }
+            
+            /* Botón hamburguesa en navbar para móvil */
+            .navbar-toggler {
+                border-color: rgba(255,255,255,0.5);
+            }
+        }
+        
+        /* En tablets y escritorio, sidebar visible */
+        @media (min-width: 768px) {
+            .sidebar {
+                min-height: calc(100vh - 56px);
+                position: sticky;
+                top: 56px;
+            }
         }
         
         .sidebar a {
@@ -101,6 +150,14 @@
             color: var(--dark-bg);
             font-weight: 600;
         }
+        
+        /* Ajuste para el contenido principal en móvil */
+        @media (max-width: 767.98px) {
+            .main-content {
+                width: 100%;
+                padding: 1rem !important;
+            }
+        }
     </style>
     
     <!-- jQuery CDN -->
@@ -110,6 +167,11 @@
     @auth
     <nav class="navbar navbar-expand-lg navbar-dark navbar-bomberos">
         <div class="container-fluid">
+            <!-- Botón hamburguesa solo en móvil -->
+            <button class="navbar-toggler d-md-none me-2" type="button" id="sidebarToggleMobile">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
             <a class="navbar-brand" href="{{ route('dashboard') }}">
                 <i class="bi bi-fire me-2"></i>
                 <strong>Sistema Bomberos</strong>
@@ -123,7 +185,7 @@
                         {{ Auth::user()->name }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Mi Perfil</a></li>
+                        <li><a class="dropdown-item" href="{{ route('users.show', Auth::user()) }}"><i class="bi bi-person me-2"></i>Mi Perfil</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <form id="logout-form" action="{{ route('logout') }}" method="POST">
@@ -139,22 +201,23 @@
         </div>
     </nav>
     
-    @auth
-        <!-- Después del navbar y antes del container-fluid -->
-        <div class="container-fluid mt-3">
-            <div class="row">
-                <div class="col-12">
-                    @include('components.alert')
-                </div>
+    <!-- Overlay para móvil -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Alertas -->
+    <div class="container-fluid mt-3">
+        <div class="row">
+            <div class="col-12">
+                @include('components.alert')
             </div>
         </div>
-    @endauth
+    </div>
     
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
             <div class="col-md-3 col-lg-2 px-0">
-                <div class="sidebar">
+                <div class="sidebar" id="sidebar">
                     <div class="text-center py-4">
                         <h5><i class="bi bi-fire me-2"></i>Menú Principal</h5>
                         @if(Auth::user()->is_admin)
@@ -171,20 +234,26 @@
                     <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
                         <i class="bi bi-people me-2"></i>Gestión de Usuarios
                     </a>
+                    
                     <a href="{{ route('partes-incendios.index') }}" class="{{ request()->routeIs('partes-incendios.*') ? 'active' : '' }}">
                         <i class="bi bi-file-earmark-text me-2"></i>Partes de Incendios
                     </a>
+                    
+                    <a href="{{ route('partes-emergencias.index') }}" class="{{ request()->routeIs('partes-emergencias.*') ? 'active' : '' }}">
+                        <i class="bi bi-ambulance me-2"></i>Emergencias Médicas
+                    </a>
+                    
                     @if(Auth::user()->is_admin)
-                        <a href="#" class="{{ request()->is('reports*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.reports') }}" class="{{ request()->routeIs('admin.reports') ? 'active' : '' }}">
                             <i class="bi bi-file-earmark-bar-graph me-2"></i>Reportes
                         </a>
                         
-                        <a href="#" class="{{ request()->is('settings*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.settings') }}" class="{{ request()->routeIs('admin.settings') ? 'active' : '' }}">
                             <i class="bi bi-sliders me-2"></i>Configuración
                         </a>
                     @endif
                     
-                    <a href="{{ route('users.show', Auth::user()) }}">
+                    <a href="{{ route('users.show', Auth::user()) }}" class="{{ request()->routeIs('users.show') && request()->route('user') == Auth::id() ? 'active' : '' }}">
                         <i class="bi bi-person-circle me-2"></i>Mi Perfil
                     </a>
                     
@@ -212,6 +281,51 @@
 
     <!-- Bootstrap 5 JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+    $(document).ready(function() {
+        const sidebar = $('#sidebar');
+        const sidebarOverlay = $('#sidebarOverlay');
+        const sidebarToggleMobile = $('#sidebarToggleMobile');
+        
+        // Función para alternar sidebar en móvil
+        function toggleSidebar() {
+            if ($(window).width() < 768) {
+                sidebar.toggleClass('show');
+                sidebarOverlay.toggleClass('show');
+            }
+        }
+        
+        // Eventos para abrir/cerrar sidebar
+        sidebarToggleMobile.on('click', toggleSidebar);
+        sidebarOverlay.on('click', toggleSidebar);
+        
+        // Cerrar sidebar al hacer clic en un enlace (solo en móvil)
+        if ($(window).width() < 768) {
+            $('.sidebar a').on('click', toggleSidebar);
+        }
+        
+        // Cerrar sidebar con tecla Escape
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.hasClass('show')) {
+                toggleSidebar();
+            }
+        });
+        
+        // Ajustar dinámicamente en resize
+        $(window).on('resize', function() {
+            if ($(window).width() >= 768) {
+                sidebar.removeClass('show');
+                sidebarOverlay.removeClass('show');
+            }
+        });
+        
+        // Auto-ocultar alertas después de 5 segundos
+        setTimeout(function() {
+            $('.alert').alert('close');
+        }, 5000);
+    });
+    </script>
     
     @yield('scripts')
 </body>

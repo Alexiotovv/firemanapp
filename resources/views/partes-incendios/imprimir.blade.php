@@ -209,7 +209,6 @@
         <div class="header">
             <h3>CUERPO GENERAL DE BOMBEROS VOLUNTARIOS DEL PERÚ</h3>
             <h4>XI COMANDANCIA DEPARTAMENTAL DE LORETO</h4>
-            <h4>Compañía de Bomberos "BELEN" Nº 41</h4>
             <h5>PARTES DE SERVICIO Nº {{ str_pad($partesIncendio->numero_parte, 4, '0', STR_PAD_LEFT) }}</h5>
         </div>
         

@@ -3,17 +3,20 @@
 @section('title', 'Gestión de Usuarios')
 
 @section('content')
+
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="align-items-center">
                 <div>
                     <h2 class="mb-0"><i class="bi bi-people me-2"></i>Gestión de Usuarios</h2>
                     <p class="text-muted">Administra los usuarios del sistema</p>
                 </div>
-                <a href="{{ route('users.create') }}" class="btn btn-bomberos">
-                    <i class="bi bi-person-plus me-2"></i>Nuevo Usuario
-                </a>
+                <div class="col-md-4">
+                    <a href="{{ route('users.create') }}" class="btn btn-bomberos w-50 w-md-auto">
+                        <i class="bi bi-person-plus me-2"></i>Nuevo Usuario
+                    </a>
+                </div>
             </div>
         </div>
     </div>

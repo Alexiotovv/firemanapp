@@ -66,7 +66,7 @@
 <body>
     <div class="login-card">
         <div class="login-header">
-            <div class="fire-icon">🔥</div>
+            <img src="{{asset('img/logo.png')}}" style="width: 80px;" alt="">
             <h3>Sistema de Bomberos</h3>
             <p class="mb-0">Acceso al sistema</p>
         </div>
