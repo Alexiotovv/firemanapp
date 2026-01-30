@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Sistema Bomberos')</title>
+    <title>@yield('title', 'SISBOM-XI CD LORETO')</title>
     
     <!-- Bootstrap 5 CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -174,7 +174,7 @@
             
             <a class="navbar-brand" href="{{ route('dashboard') }}">
                 <i class="bi bi-fire me-2"></i>
-                <strong>Sistema Bomberos</strong>
+                <strong>SISBOM-XI CD LORETO</strong>
             </a>
             
             <div class="d-flex align-items-center">

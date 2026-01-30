@@ -211,7 +211,7 @@
             <div class="login-card">
                 <div class="login-header">
                     <img src="{{ asset('img/logo.png') }}" alt="Logo Bomberos">
-                    <h3>Sistema de Bomberos</h3>
+                    <h3>SISBOM-XI CD LORETO</h3>
                     <p>Acceso al sistema de gestión</p>
                 </div>
                 
