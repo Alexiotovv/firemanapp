@@ -111,7 +111,25 @@
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label class="form-label">MÁQUINA *</label>
-                            <input type="text" class="form-control" name="maquina" required>
+                            <select class="form-control" name="maquina" required>
+                                <option value="">-- Seleccione una máquina --</option>
+                                <option value="M93-1">M93-1</option>
+                                <option value="M93-5 ABC">M93-5 ABC</option>
+                                <option value="ESC-93">ESC-93</option>
+                                <option value="AUX-93">AUX-93</option>
+                                <option value="RESLIG-93">RESLIG-93</option>
+                                <option value="CIST-92">CIST-92</option>
+                                <option value="AUX-92">AUX-92</option>
+                                <option value="CIST-41">CIST-41</option>
+                                <option value="M41-6">M41-6</option>
+                                <option value="AMB-41">AMB-41</option>
+                                <option value="RESLIG-41">RESLIG-41</option>
+                                <option value="CIST-94">CIST-94</option>
+                                <option value="AUX-94">AUX-94</option>
+                                <option value="CIST-175">CIST-175</option>
+                                <option value="AMB-175">AMB-175</option>
+                                <option value="RESLIG-175">RESLIG-175</option>
+                            </select>
                         </div>
                     </div>
                     <div class="col-md-4">
