@@ -24,6 +24,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', function () {
         return redirect()->route('users.show', auth()->user());
     })->name('profile');
+
+    // Rutas de edición de perfil para el usuario autenticado (no creación)
+    Route::get('/profile/edit', function () {
+        return redirect()->route('users.edit', auth()->user());
+    })->name('profile.edit');
+
+    Route::put('/profile', function () {
+        return app()->call([App\Http\Controllers\UserController::class, 'update'], ['user' => auth()->user(), 'request' => request()]);
+    })->name('profile.update');
     
     // Rutas para gestión de usuarios
     Route::prefix('users')->name('users.')->group(function () {
@@ -54,9 +63,13 @@ Route::middleware(['auth'])->group(function () {
     
     // Rutas solo para administradores
     Route::middleware(['admin'])->group(function () {
-        Route::get('/admin/reports', function () {
-            return view('admin.reports');
-        })->name('admin.reports');
+        Route::get('/admin/reports', [UserController::class, 'reports'])->name('admin.reports');
+
+        // Exportar usuarios (CSV)
+        Route::get('/admin/users/export', [UserController::class, 'export'])->name('admin.users.export');
+        
+        // Detalle de partes por usuario (vista admin)
+        Route::get('/admin/reports/user/{user}', [UserController::class, 'reportUser'])->name('admin.reports.user');
         
         Route::get('/admin/settings', function () {
             return view('admin.settings');

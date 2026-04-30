@@ -20,7 +20,7 @@
         <div class="col-lg-8">
             <div class="card card-bomberos">
                 <div class="card-body">
-                    <form method="POST" 
+                      <form method="POST" 
                           action="{{ isset($user) ? route('users.update', $user) : route('users.store') }}">
                         @csrf
                         @if(isset($user))
@@ -82,7 +82,7 @@
                             </div>
                         </div>
 
-                        <!-- SECCIÓN: Información Profesional -->
+                        @if(isset($user))
                         <div class="section-header mb-3 mt-4">
                             <h5><i class="bi bi-briefcase me-2"></i>Información Profesional</h5>
                             <hr>
@@ -147,8 +147,10 @@
                                 @enderror
                             </div>
                         </div>
+                        @endif
 
                         <!-- SECCIÓN: Capacitación -->
+                        @if(isset($user))
                         <div class="section-header mb-3 mt-4">
                             <h5><i class="bi bi-book me-2"></i>Capacitación y Cursos</h5>
                             <hr>
@@ -182,6 +184,7 @@
                                 @enderror
                             </div>
                         </div>
+                        @endif
 
                         <!-- SECCIÓN: Información de Contacto -->
                         <div class="section-header mb-3 mt-4">
@@ -189,6 +192,7 @@
                             <hr>
                         </div>
 
+                        @if(isset($user))
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="email" class="form-label">Email Institucional *</label>
@@ -219,6 +223,23 @@
                                 @enderror
                             </div>
                         </div>
+                        @else
+                        <!-- Para creación de usuario solo mostrar email y password arriba; aquí no repetir campos de perfil -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email Institucional *</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ old('email', '') }}" required>
+                                @error('email')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">Contraseña *</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                        </div>
+                        @endif
 
                         <!-- SECCIÓN: Solo para Admin y Crear Usuario -->
                         @if(auth()->user()->is_admin || !isset($user))

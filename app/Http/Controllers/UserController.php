@@ -170,4 +170,127 @@ class UserController extends Controller
         $user->delete();
         return redirect()->route('users.index')->with('success', 'Usuario eliminado exitosamente.');
     }
+
+    /**
+     * Export users and their profile information as CSV (admin only).
+     */
+    public function export()
+    {
+        if (!auth()->user() || !auth()->user()->is_admin) {
+            abort(403);
+        }
+
+        $users = User::all();
+
+        $columns = [
+            'Nombre', 'Apellidos', 'Codigo', 'Grados', 'Fecha Asenso', 'Fecha Graduacion',
+            'Curso Basicos', 'Curso Tecnicos', 'Curso Liderazgo', 'Telefono', 'UBO',
+            'Correo Personal', 'Correo Institucional', 'Ultimo Cargo', 'Tipo Sangre', 'DNI', 'Compañia', 'Es Admin'
+        ];
+
+        $callback = function() use ($users, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($users as $u) {
+                $row = [
+                    $u->name,
+                    $u->apellidos,
+                    $u->codigo,
+                    $u->grados,
+                    $u->fecha_asenso ? $u->fecha_asenso->format('Y-m-d') : '',
+                    $u->fecha_graduacion ? $u->fecha_graduacion->format('Y-m-d') : '',
+                    $u->curso_basicos,
+                    $u->curso_tecnicos,
+                    $u->curso_liderazgo,
+                    $u->telefono,
+                    $u->ubo,
+                    $u->correo_personal,
+                    $u->email,
+                    $u->ultimo_cargo,
+                    $u->tipo_sangre,
+                    $u->dni,
+                    $u->compania,
+                    $u->is_admin ? 'SI' : 'NO'
+                ];
+
+                fputcsv($file, $row);
+            }
+
+            fclose($file);
+        };
+
+        $fileName = 'users_export_' . date('Ymd_His') . '.csv';
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+        ]);
+    }
+
+    /**
+     * Mostrar resumen de emergencias atendidas por personal (para administradores).
+     */
+    public function reports()
+    {
+        if (!auth()->user() || !auth()->user()->is_admin) {
+            abort(403);
+        }
+
+        // Cargar todos los usuarios
+        $users = \App\Models\User::all();
+
+        $summary = [];
+        $totalEmergencias = 0;
+        $totalIncendios = 0;
+
+        foreach ($users as $u) {
+            $emergenciasCount = \App\Models\ParteEmergencia::where('user_id', $u->id)->count();
+            $incendiosCount = \App\Models\ParteIncendio::where('user_id', $u->id)->count();
+
+            // Obtener última fecha de atención (max de ambas tablas)
+            $lastEmerg = \App\Models\ParteEmergencia::where('user_id', $u->id)->max('fecha');
+            $lastInc = \App\Models\ParteIncendio::where('user_id', $u->id)->max('fecha');
+
+            $lastDates = array_filter([$lastEmerg, $lastInc]);
+            $lastAtencion = null;
+            if (!empty($lastDates)) {
+                $lastAtencion = collect($lastDates)->max();
+            }
+
+            $summary[] = [
+                'user' => $u,
+                'emergencias' => $emergenciasCount,
+                'incendios' => $incendiosCount,
+                'total' => $emergenciasCount + $incendiosCount,
+                'last_atencion' => $lastAtencion,
+            ];
+
+            $totalEmergencias += $emergenciasCount;
+            $totalIncendios += $incendiosCount;
+        }
+
+        $totals = [
+            'total_emergencias' => $totalEmergencias,
+            'total_incendios' => $totalIncendios,
+            'total_partes' => $totalEmergencias + $totalIncendios,
+        ];
+
+        return view('admin.reports', compact('summary', 'totals'));
+    }
+
+    /**
+     * Mostrar detalle de partes (emergencias e incendios) de un usuario.
+     */
+    public function reportUser(\App\Models\User $user)
+    {
+        if (!auth()->user() || !auth()->user()->is_admin) {
+            abort(403);
+        }
+
+        $emergencias = \App\Models\ParteEmergencia::where('user_id', $user->id)->orderBy('fecha', 'desc')->get();
+        $incendios = \App\Models\ParteIncendio::where('user_id', $user->id)->orderBy('fecha', 'desc')->get();
+
+        return view('admin.report_user', compact('user', 'emergencias', 'incendios'));
+    }
 }
