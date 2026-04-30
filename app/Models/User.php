@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Profile;
 
 class User extends Authenticatable
 {
@@ -18,18 +19,7 @@ class User extends Authenticatable
         'is_admin',
         'email',
         'password',
-        'codigo',
-        'grados',
-        'fecha_asenso',
-        'fecha_graduacion',
-        'curso_basicos',
-        'curso_tecnicos',
-        'curso_liderazgo',
-        'telefono',
-        'ubo',
-        'correo_personal',
-        'ultimo_cargo',
-        'tipo_sangre',
+        // profile fields moved to profiles table
     ];
 
     protected $hidden = [
@@ -43,8 +33,6 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
-            'fecha_asenso' => 'date',
-            'fecha_graduacion' => 'date',
         ];
     }
 
@@ -52,5 +40,11 @@ class User extends Authenticatable
     public function isAdmin()
     {
         return $this->is_admin === true;
+    }
+
+    // Relación con el perfil
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
     }
 }

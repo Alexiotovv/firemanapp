@@ -75,27 +75,27 @@
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <p><strong>Código/Matrícula:</strong><br>{{ $user->codigo ?? 'N/A' }}</p>
+                            <p><strong>Código/Matrícula:</strong><br>{{ optional($user->profile)->codigo ?? 'N/A' }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Grados/Rango:</strong><br>{{ $user->grados ?? 'N/A' }}</p>
+                            <p><strong>Grados/Rango:</strong><br>{{ optional($user->profile)->grados ?? 'N/A' }}</p>
                         </div>
                     </div>
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <p><strong>Último Cargo Ocupado:</strong><br>{{ $user->ultimo_cargo ?? 'N/A' }}</p>
+                            <p><strong>Último Cargo Ocupado:</strong><br>{{ optional($user->profile)->ultimo_cargo ?? 'N/A' }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>UBO (Unidad Base Operaciones):</strong><br>{{ $user->ubo ?? 'N/A' }}</p>
+                            <p><strong>UBO (Unidad Base Operaciones):</strong><br>{{ optional($user->profile)->ubo ?? 'N/A' }}</p>
                         </div>
                     </div>
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <p><strong>Fecha de Graduación:</strong><br>
-                                @if($user->fecha_graduacion)
-                                    {{ $user->fecha_graduacion->format('d/m/Y') }}
+                                @if(optional($user->profile)->fecha_graduacion)
+                                    {{ optional($user->profile)->fecha_graduacion->format('d/m/Y') }}
                                 @else
                                     <span class="text-muted">No especificada</span>
                                 @endif
@@ -103,8 +103,8 @@
                         </div>
                         <div class="col-md-6">
                             <p><strong>Última Fecha de Ascenso:</strong><br>
-                                @if($user->fecha_asenso)
-                                    {{ $user->fecha_asenso->format('d/m/Y') }}
+                                @if(optional($user->profile)->fecha_asenso)
+                                    {{ optional($user->profile)->fecha_asenso->format('d/m/Y') }}
                                 @else
                                     <span class="text-muted">No especificada</span>
                                 @endif
@@ -123,8 +123,8 @@
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <p><strong>Cursos Básicos:</strong><br>
-                                @if($user->curso_basicos)
-                                    <span class="badge bg-success">{{ $user->curso_basicos }}</span>
+                                @if(optional($user->profile)->curso_basicos)
+                                    <span class="badge bg-success">{{ optional($user->profile)->curso_basicos }}</span>
                                 @else
                                     <span class="text-muted">Pendiente</span>
                                 @endif
@@ -132,8 +132,8 @@
                         </div>
                         <div class="col-md-4">
                             <p><strong>Cursos Técnicos:</strong><br>
-                                @if($user->curso_tecnicos)
-                                    <span class="badge bg-info">{{ $user->curso_tecnicos }}</span>
+                                @if(optional($user->profile)->curso_tecnicos)
+                                    <span class="badge bg-info">{{ optional($user->profile)->curso_tecnicos }}</span>
                                 @else
                                     <span class="text-muted">Pendiente</span>
                                 @endif
@@ -141,8 +141,8 @@
                         </div>
                         <div class="col-md-4">
                             <p><strong>Cursos de Liderazgo:</strong><br>
-                                @if($user->curso_liderazgo)
-                                    <span class="badge bg-warning text-dark">{{ $user->curso_liderazgo }}</span>
+                                @if(optional($user->profile)->curso_liderazgo)
+                                    <span class="badge bg-warning text-dark">{{ optional($user->profile)->curso_liderazgo }}</span>
                                 @else
                                     <span class="text-muted">Pendiente</span>
                                 @endif
@@ -161,8 +161,8 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <p><strong>Teléfono:</strong><br>
-                                @if($user->telefono)
-                                    <a href="tel:{{ $user->telefono }}">{{ $user->telefono }}</a>
+                                @if(optional($user->profile)->telefono)
+                                    <a href="tel:{{ optional($user->profile)->telefono }}">{{ optional($user->profile)->telefono }}</a>
                                 @else
                                     <span class="text-muted">No especificado</span>
                                 @endif
@@ -176,8 +176,8 @@
                     <div class="row mb-3">
                         <div class="col-md-12">
                             <p><strong>Email Personal:</strong><br>
-                                @if($user->correo_personal)
-                                    <a href="mailto:{{ $user->correo_personal }}">{{ $user->correo_personal }}</a>
+                                @if(optional($user->profile)->correo_personal)
+                                    <a href="mailto:{{ optional($user->profile)->correo_personal }}">{{ optional($user->profile)->correo_personal }}</a>
                                 @else
                                     <span class="text-muted">No especificado</span>
                                 @endif

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ParteIncendioController;
 use App\Http\Controllers\ParteEmergenciaController;
 
@@ -30,9 +31,9 @@ Route::middleware(['auth'])->group(function () {
         return redirect()->route('users.edit', auth()->user());
     })->name('profile.edit');
 
-    Route::put('/profile', function () {
-        return app()->call([App\Http\Controllers\UserController::class, 'update'], ['user' => auth()->user(), 'request' => request()]);
-    })->name('profile.update');
+    // Profile store/update handled by ProfileController
+    Route::post('/profile', [ProfileController::class, 'store'])->name('profile.store');
+    Route::put('/profile/{profile}', [ProfileController::class, 'update'])->name('profile.update');
     
     // Rutas para gestión de usuarios
     Route::prefix('users')->name('users.')->group(function () {

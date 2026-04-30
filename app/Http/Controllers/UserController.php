@@ -50,18 +50,6 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'is_admin' => 'boolean',
             'password' => 'required|string|min:6|confirmed',
-            'codigo' => 'nullable|string|max:255',
-            'grados' => 'nullable|string|max:255',
-            'fecha_asenso' => 'nullable|date',
-            'fecha_graduacion' => 'nullable|date',
-            'curso_basicos' => 'nullable|string|max:255',
-            'curso_tecnicos' => 'nullable|string|max:255',
-            'curso_liderazgo' => 'nullable|string|max:255',
-            'telefono' => 'nullable|string|max:20',
-            'ubo' => 'nullable|string|max:255',
-            'correo_personal' => 'nullable|string|email|max:255',
-            'ultimo_cargo' => 'nullable|string|max:255',
-            'tipo_sangre' => 'nullable|string|max:10',
         ]);
 
         User::create([
@@ -72,18 +60,6 @@ class UserController extends Controller
             'email' => $request->email,
             'is_admin' => $request->has('is_admin') ? true : false,
             'password' => Hash::make($request->password),
-            'codigo' => $request->codigo,
-            'grados' => $request->grados,
-            'fecha_asenso' => $request->fecha_asenso,
-            'fecha_graduacion' => $request->fecha_graduacion,
-            'curso_basicos' => $request->curso_basicos,
-            'curso_tecnicos' => $request->curso_tecnicos,
-            'curso_liderazgo' => $request->curso_liderazgo,
-            'telefono' => $request->telefono,
-            'ubo' => $request->ubo,
-            'correo_personal' => $request->correo_personal,
-            'ultimo_cargo' => $request->ultimo_cargo,
-            'tipo_sangre' => $request->tipo_sangre,
         ]);
 
         return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
@@ -112,23 +88,12 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         // Reglas de validación
+
         $rules = [
             'name' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
             'dni' => 'required|string|max:20|unique:users,dni,' . $user->id,
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'codigo' => 'nullable|string|max:255',
-            'grados' => 'nullable|string|max:255',
-            'fecha_asenso' => 'nullable|date',
-            'fecha_graduacion' => 'nullable|date',
-            'curso_basicos' => 'nullable|string|max:255',
-            'curso_tecnicos' => 'nullable|string|max:255',
-            'curso_liderazgo' => 'nullable|string|max:255',
-            'telefono' => 'nullable|string|max:20',
-            'ubo' => 'nullable|string|max:255',
-            'correo_personal' => 'nullable|string|email|max:255',
-            'ultimo_cargo' => 'nullable|string|max:255',
-            'tipo_sangre' => 'nullable|string|max:10',
         ];
         
         // Solo admin puede cambiar la compañía
@@ -139,10 +104,7 @@ class UserController extends Controller
         $request->validate($rules);
 
         $data = $request->only([
-            'name', 'apellidos', 'dni', 'email', 'codigo', 'grados', 
-            'fecha_asenso', 'fecha_graduacion', 'curso_basicos', 'curso_tecnicos', 
-            'curso_liderazgo', 'telefono', 'ubo', 'correo_personal', 
-            'ultimo_cargo', 'tipo_sangre'
+            'name', 'apellidos', 'dni', 'email'
         ]);
         
         // Solo admin puede cambiar la compañía y el rol
@@ -180,37 +142,40 @@ class UserController extends Controller
             abort(403);
         }
 
-        $users = User::all();
+        // Export profiles joined with users. If a user has no profile, still export basic user info.
+        $profiles = \App\Models\Profile::with('user')->get();
 
         $columns = [
-            'Nombre', 'Apellidos', 'Codigo', 'Grados', 'Fecha Asenso', 'Fecha Graduacion',
+            'Nombre', 'Apellidos', 'DNI', 'Compañia', 'Email Institucional',
+            'Codigo', 'Grados', 'Fecha Asenso', 'Fecha Graduacion',
             'Curso Basicos', 'Curso Tecnicos', 'Curso Liderazgo', 'Telefono', 'UBO',
-            'Correo Personal', 'Correo Institucional', 'Ultimo Cargo', 'Tipo Sangre', 'DNI', 'Compañia', 'Es Admin'
+            'Correo Personal', 'Ultimo Cargo', 'Tipo Sangre', 'Es Admin'
         ];
 
-        $callback = function() use ($users, $columns) {
+        $callback = function() use ($profiles, $columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
 
-            foreach ($users as $u) {
+            foreach ($profiles as $p) {
+                $u = $p->user;
                 $row = [
-                    $u->name,
-                    $u->apellidos,
-                    $u->codigo,
-                    $u->grados,
-                    $u->fecha_asenso ? $u->fecha_asenso->format('Y-m-d') : '',
-                    $u->fecha_graduacion ? $u->fecha_graduacion->format('Y-m-d') : '',
-                    $u->curso_basicos,
-                    $u->curso_tecnicos,
-                    $u->curso_liderazgo,
-                    $u->telefono,
-                    $u->ubo,
-                    $u->correo_personal,
-                    $u->email,
-                    $u->ultimo_cargo,
-                    $u->tipo_sangre,
-                    $u->dni,
-                    $u->compania,
+                    $u->name ?? '',
+                    $u->apellidos ?? '',
+                    $u->dni ?? '',
+                    $u->compania ?? '',
+                    $u->email ?? '',
+                    $p->codigo,
+                    $p->grados,
+                    $p->fecha_asenso ? $p->fecha_asenso->format('Y-m-d') : '',
+                    $p->fecha_graduacion ? $p->fecha_graduacion->format('Y-m-d') : '',
+                    $p->curso_basicos,
+                    $p->curso_tecnicos,
+                    $p->curso_liderazgo,
+                    $p->telefono,
+                    $p->ubo,
+                    $p->correo_personal,
+                    $p->ultimo_cargo,
+                    $p->tipo_sangre,
                     $u->is_admin ? 'SI' : 'NO'
                 ];
 
@@ -220,7 +185,7 @@ class UserController extends Controller
             fclose($file);
         };
 
-        $fileName = 'users_export_' . date('Ymd_His') . '.csv';
+        $fileName = 'profiles_export_' . date('Ymd_His') . '.csv';
 
         return response()->stream($callback, 200, [
             'Content-Type' => 'text/csv',
