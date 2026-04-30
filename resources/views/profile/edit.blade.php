@@ -21,7 +21,7 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="codigo" class="form-label">Código / Matrícula</label>
+                                <label for="codigo" class="form-label">Código</label>
                                 <input type="text" class="form-control" id="codigo" name="codigo" value="{{ old('codigo', $profile->codigo ?? '') }}">
                                 @error('codigo')<div class="text-danger small">{{ $message }}</div>@enderror
                             </div>
