@@ -14,6 +14,7 @@ class Profile extends Model
 
     protected $fillable = [
         'user_id',
+        'nombres_apellidos',
         'codigo',
         'grados',
         'fecha_asenso',
@@ -24,6 +25,7 @@ class Profile extends Model
         'telefono',
         'ubo',
         'correo_personal',
+        'dni',
         'ultimo_cargo',
         'tipo_sangre',
     ];

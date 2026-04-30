@@ -13,11 +13,22 @@
                         <hr>
                     </div>
 
-                    <form method="POST" action="{{ $profile?->id ? route('profile.update', $profile) : route('profile.store') }}">
+                    <form method="POST" action="{{ route('profile.store') }}">
                         @csrf
-                        @if($profile?->id)
-                            @method('PUT')
-                        @endif
+
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nombres_apellidos" class="form-label">Nombres y Apellidos</label>
+                                <input type="text" class="form-control" id="nombres_apellidos" name="nombres_apellidos" value="{{ old('nombres_apellidos') }}">
+                                @error('nombres_apellidos')<div class="text-danger small">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dni" class="form-label">DNI</label>
+                                <input type="text" class="form-control" id="dni" name="dni" value="{{ old('dni') }}">
+                                @error('dni')<div class="text-danger small">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -73,7 +84,7 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="correo_personal" class="form-label">Email Personal</label>
+                                <label for="correo_personal" class="form-label">Correo electrónico personal/institucional</label>
                                 <input type="email" class="form-control" id="correo_personal" name="correo_personal" value="{{ old('correo_personal', $profile->correo_personal ?? '') }}">
                                 @error('correo_personal')<div class="text-danger small">{{ $message }}</div>@enderror
                             </div>
@@ -100,7 +111,12 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="tipo_sangre" class="form-label">Tipo de Sangre</label>
-                                <input type="text" class="form-control" id="tipo_sangre" name="tipo_sangre" value="{{ old('tipo_sangre', $profile->tipo_sangre ?? '') }}">
+                                <select class="form-select" id="tipo_sangre" name="tipo_sangre">
+                                    <option value="" disabled selected>Selecciona un tipo</option>
+                                    @foreach(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $type)
+                                        <option value="{{ $type }}" {{ old('tipo_sangre', $profile->tipo_sangre ?? '') === $type ? 'selected' : '' }}>{{ $type }}</option>
+                                    @endforeach
+                                </select>
                                 @error('tipo_sangre')<div class="text-danger small">{{ $message }}</div>@enderror
                             </div>
                         </div>
@@ -125,6 +141,9 @@
                     </p>
                     <p class="small">
                         No se editan datos de usuario, contraseña ni acceso desde esta pantalla.
+                    </p>
+                    <p class="small">
+                        Cada envío crea un nuevo registro en el sistema. Puedes enviar varios registros si lo deseas.
                     </p>
                     <p class="small">
                         Guarda los cambios cuando termines.

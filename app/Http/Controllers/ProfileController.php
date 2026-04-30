@@ -12,7 +12,7 @@ class ProfileController extends Controller
     public function edit()
     {
         $user = auth()->user();
-        $profile = $user->profile;
+        $profile = null;
 
         return view('profile.edit', compact('profile'));
     }
@@ -25,6 +25,7 @@ class ProfileController extends Controller
         }
 
         $data = $request->validate([
+            'nombres_apellidos' => 'nullable|string|max:255',
             'codigo' => 'nullable|string|max:255',
             'grados' => 'nullable|string|max:255',
             'fecha_asenso' => 'nullable|date',
@@ -35,13 +36,14 @@ class ProfileController extends Controller
             'telefono' => 'nullable|string|max:20',
             'ubo' => 'nullable|string|max:255',
             'correo_personal' => 'nullable|email|max:255',
+            'dni' => 'nullable|string|max:50',
             'ultimo_cargo' => 'nullable|string|max:255',
             'tipo_sangre' => 'nullable|string|max:10',
         ]);
 
         $data['user_id'] = $user->id;
 
-        $profile = Profile::updateOrCreate(['user_id' => $user->id], $data);
+        $profile = Profile::create($data);
 
         return back()->with('success', 'Perfil guardado correctamente.');
     }
