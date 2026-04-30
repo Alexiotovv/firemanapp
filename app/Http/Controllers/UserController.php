@@ -50,6 +50,18 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'is_admin' => 'boolean',
             'password' => 'required|string|min:6|confirmed',
+            'codigo' => 'nullable|string|max:255',
+            'grados' => 'nullable|string|max:255',
+            'fecha_asenso' => 'nullable|date',
+            'fecha_graduacion' => 'nullable|date',
+            'curso_basicos' => 'nullable|string|max:255',
+            'curso_tecnicos' => 'nullable|string|max:255',
+            'curso_liderazgo' => 'nullable|string|max:255',
+            'telefono' => 'nullable|string|max:20',
+            'ubo' => 'nullable|string|max:255',
+            'correo_personal' => 'nullable|string|email|max:255',
+            'ultimo_cargo' => 'nullable|string|max:255',
+            'tipo_sangre' => 'nullable|string|max:10',
         ]);
 
         User::create([
@@ -60,6 +72,18 @@ class UserController extends Controller
             'email' => $request->email,
             'is_admin' => $request->has('is_admin') ? true : false,
             'password' => Hash::make($request->password),
+            'codigo' => $request->codigo,
+            'grados' => $request->grados,
+            'fecha_asenso' => $request->fecha_asenso,
+            'fecha_graduacion' => $request->fecha_graduacion,
+            'curso_basicos' => $request->curso_basicos,
+            'curso_tecnicos' => $request->curso_tecnicos,
+            'curso_liderazgo' => $request->curso_liderazgo,
+            'telefono' => $request->telefono,
+            'ubo' => $request->ubo,
+            'correo_personal' => $request->correo_personal,
+            'ultimo_cargo' => $request->ultimo_cargo,
+            'tipo_sangre' => $request->tipo_sangre,
         ]);
 
         return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
@@ -93,6 +117,18 @@ class UserController extends Controller
             'apellidos' => 'required|string|max:255',
             'dni' => 'required|string|max:20|unique:users,dni,' . $user->id,
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'codigo' => 'nullable|string|max:255',
+            'grados' => 'nullable|string|max:255',
+            'fecha_asenso' => 'nullable|date',
+            'fecha_graduacion' => 'nullable|date',
+            'curso_basicos' => 'nullable|string|max:255',
+            'curso_tecnicos' => 'nullable|string|max:255',
+            'curso_liderazgo' => 'nullable|string|max:255',
+            'telefono' => 'nullable|string|max:20',
+            'ubo' => 'nullable|string|max:255',
+            'correo_personal' => 'nullable|string|email|max:255',
+            'ultimo_cargo' => 'nullable|string|max:255',
+            'tipo_sangre' => 'nullable|string|max:10',
         ];
         
         // Solo admin puede cambiar la compañía
@@ -102,7 +138,12 @@ class UserController extends Controller
         
         $request->validate($rules);
 
-        $data = $request->only(['name', 'apellidos', 'dni', 'email']);
+        $data = $request->only([
+            'name', 'apellidos', 'dni', 'email', 'codigo', 'grados', 
+            'fecha_asenso', 'fecha_graduacion', 'curso_basicos', 'curso_tecnicos', 
+            'curso_liderazgo', 'telefono', 'ubo', 'correo_personal', 
+            'ultimo_cargo', 'tipo_sangre'
+        ]);
         
         // Solo admin puede cambiar la compañía y el rol
         if (auth()->user()->is_admin) {

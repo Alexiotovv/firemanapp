@@ -18,6 +18,18 @@ class User extends Authenticatable
         'is_admin',
         'email',
         'password',
+        'codigo',
+        'grados',
+        'fecha_asenso',
+        'fecha_graduacion',
+        'curso_basicos',
+        'curso_tecnicos',
+        'curso_liderazgo',
+        'telefono',
+        'ubo',
+        'correo_personal',
+        'ultimo_cargo',
+        'tipo_sangre',
     ];
 
     protected $hidden = [
@@ -31,6 +43,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'fecha_asenso' => 'date',
+            'fecha_graduacion' => 'date',
         ];
     }
 
