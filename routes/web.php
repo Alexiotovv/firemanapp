@@ -22,14 +22,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
     
     // Perfil de usuario
-    Route::get('/profile', function () {
-        return redirect()->route('users.show', auth()->user());
-    })->name('profile');
-
-    // Rutas de edición de perfil para el usuario autenticado (no creación)
-    Route::get('/profile/edit', function () {
-        return redirect()->route('users.edit', auth()->user());
-    })->name('profile.edit');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
 
     // Profile store/update handled by ProfileController
     Route::post('/profile', [ProfileController::class, 'store'])->name('profile.store');

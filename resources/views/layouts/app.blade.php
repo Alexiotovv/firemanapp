@@ -185,7 +185,7 @@
                         {{ Auth::user()->name }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{{ route('users.show', Auth::id()) }}"><i class="bi bi-person me-2"></i>Mi Perfil</a></li>
+                        <li><a class="dropdown-item" href="{{ route('profile') }}"><i class="bi bi-person me-2"></i>Mi Perfil</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <form id="logout-form" action="{{ route('logout') }}" method="POST">
@@ -253,8 +253,11 @@
                         </a>
                     @endif
                     
-                    <a href="{{ route('users.show', Auth::id()) }}" class="{{ request()->routeIs('users.show') && request()->route('user')->id == Auth::id() ? 'active' : '' }}">
+                    <a href="{{ route('profile') }}" class="{{ request()->routeIs('profile') || request()->routeIs('profile.edit') ? 'active' : '' }}">
                         <i class="bi bi-person-circle me-2"></i>Mi Perfil
+                    </a>
+                    <a href="{{ route('profile') }}" class="{{ request()->routeIs('profile') || request()->routeIs('profile.edit') ? 'active' : '' }}">
+                        <i class="bi bi-door-open me-2"></i>Personal Operativo - Form
                     </a>
                     
                     <div class="mt-4 px-3">

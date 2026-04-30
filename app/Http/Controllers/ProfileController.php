@@ -8,6 +8,14 @@ use App\Models\User;
 
 class ProfileController extends Controller
 {
+    /** Show profile form for auth user. */
+    public function edit()
+    {
+        $user = auth()->user();
+        $profile = $user->profile;
+
+        return view('profile.edit', compact('profile'));
+    }
     /** Store profile for auth user or for given user (if admin). */
     public function store(Request $request)
     {

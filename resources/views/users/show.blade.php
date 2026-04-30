@@ -212,7 +212,7 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ route('users.edit', $user) }}" class="btn btn-bomberos">
+                        <a href="{{ $user->id === auth()->user()->id ? route('profile') : route('users.edit', $user) }}" class="btn btn-bomberos">
                             <i class="bi bi-pencil me-2"></i>Editar Perfil
                         </a>
                         
