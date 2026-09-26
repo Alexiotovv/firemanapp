@@ -12,9 +12,9 @@ class ProfileController extends Controller
     public function edit()
     {
         $user = auth()->user();
-        $profile = null;
+        $profile = $user->profile;
 
-        return view('profile.edit', compact('profile'));
+        return view('profile.edit', compact('profile', 'user'));
     }
     /** Store profile for auth user or for given user (if admin). */
     public function store(Request $request)
@@ -43,7 +43,7 @@ class ProfileController extends Controller
 
         $data['user_id'] = $user->id;
 
-        $profile = Profile::create($data);
+        $user->profile()->updateOrCreate([], $data);
 
         return back()->with('success', 'Perfil guardado correctamente.');
     }
@@ -57,6 +57,8 @@ class ProfileController extends Controller
         }
 
         $data = $request->validate([
+            'nombres_apellidos' => 'nullable|string|max:255',
+            'dni' => 'nullable|string|max:50',
             'codigo' => 'nullable|string|max:255',
             'grados' => 'nullable|string|max:255',
             'fecha_asenso' => 'nullable|date',

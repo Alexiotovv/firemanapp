@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,6 +12,8 @@ return new class extends Migration
         Schema::create('profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade')->unique();
+            $table->string('nombres_apellidos')->nullable()->comment('Nombres y apellidos');
+            $table->string('dni')->nullable()->comment('Documento Nacional de Identidad');
 
             // Información profesional
             $table->string('codigo')->nullable()->comment('Código o Matrícula del bombero');
@@ -35,17 +38,38 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Quitar columnas de la tabla users si existen
-        Schema::table('users', function (Blueprint $table) {
-            $cols = [
-                'codigo', 'grados', 'fecha_asenso', 'fecha_graduacion',
-                'curso_basicos', 'curso_tecnicos', 'curso_liderazgo',
-                'telefono', 'ubo', 'correo_personal', 'ultimo_cargo', 'tipo_sangre'
+        $legacyFields = [
+            'codigo', 'grados', 'fecha_asenso', 'fecha_graduacion',
+            'curso_basicos', 'curso_tecnicos', 'curso_liderazgo',
+            'telefono', 'ubo', 'correo_personal', 'ultimo_cargo', 'tipo_sangre',
+        ];
+
+        DB::table('users')->orderBy('id')->get()->each(function ($user) use ($legacyFields) {
+            $profile = [
+                'user_id' => $user->id,
+                'nombres_apellidos' => trim(($user->name ?? '') . ' ' . ($user->apellidos ?? '')),
+                'dni' => $user->dni ?? null,
+                'created_at' => now(),
+                'updated_at' => now(),
             ];
 
-            foreach ($cols as $c) {
-                if (Schema::hasColumn('users', $c)) {
-                    $table->dropColumn($c);
+            foreach ($legacyFields as $field) {
+                $profile[$field] = $user->{$field} ?? null;
+            }
+
+            DB::table('profiles')->insert($profile);
+        });
+
+        Schema::table('users', function (Blueprint $table) {
+            $columns = [
+                'codigo', 'grados', 'fecha_asenso', 'fecha_graduacion',
+                'curso_basicos', 'curso_tecnicos', 'curso_liderazgo', 'telefono',
+                'ubo', 'correo_personal', 'ultimo_cargo', 'tipo_sangre',
+            ];
+
+            foreach ($columns as $column) {
+                if (Schema::hasColumn('users', $column)) {
+                    $table->dropColumn($column);
                 }
             }
         });
@@ -68,6 +92,23 @@ return new class extends Migration
             $table->string('correo_personal')->nullable();
             $table->string('ultimo_cargo')->nullable();
             $table->string('tipo_sangre')->nullable();
+        });
+
+        DB::table('profiles')->orderBy('user_id')->get()->each(function ($profile) {
+            DB::table('users')->where('id', $profile->user_id)->update([
+                'codigo' => $profile->codigo,
+                'grados' => $profile->grados,
+                'fecha_asenso' => $profile->fecha_asenso,
+                'fecha_graduacion' => $profile->fecha_graduacion,
+                'curso_basicos' => $profile->curso_basicos,
+                'curso_tecnicos' => $profile->curso_tecnicos,
+                'curso_liderazgo' => $profile->curso_liderazgo,
+                'telefono' => $profile->telefono,
+                'ubo' => $profile->ubo,
+                'correo_personal' => $profile->correo_personal,
+                'ultimo_cargo' => $profile->ultimo_cargo,
+                'tipo_sangre' => $profile->tipo_sangre,
+            ]);
         });
 
         Schema::dropIfExists('profiles');

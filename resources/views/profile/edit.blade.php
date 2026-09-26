@@ -20,12 +20,12 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="nombres_apellidos" class="form-label">Nombres y Apellidos</label>
-                                <input type="text" class="form-control" id="nombres_apellidos" name="nombres_apellidos" value="{{ old('nombres_apellidos') }}">
+                                <input type="text" class="form-control" id="nombres_apellidos" name="nombres_apellidos" value="{{ old('nombres_apellidos', $profile->nombres_apellidos ?? trim($user->name . ' ' . $user->apellidos)) }}">
                                 @error('nombres_apellidos')<div class="text-danger small">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="dni" class="form-label">DNI</label>
-                                <input type="text" class="form-control" id="dni" name="dni" value="{{ old('dni') }}">
+                                <input type="text" class="form-control" id="dni" name="dni" value="{{ old('dni', $profile->dni ?? $user->dni) }}">
                                 @error('dni')<div class="text-danger small">{{ $message }}</div>@enderror
                             </div>
                         </div>
@@ -137,13 +137,13 @@
                 </div>
                 <div class="card-body">
                     <p class="small">
-                        Aquí puedes completar únicamente los datos de tu perfil profesional y de contacto.
+                        Aquí puedes completar y actualizar tus datos de perfil profesional y contacto.
                     </p>
                     <p class="small">
                         No se editan datos de usuario, contraseña ni acceso desde esta pantalla.
                     </p>
                     <p class="small">
-                        Cada envío crea un nuevo registro en el sistema. Puedes enviar varios registros si lo deseas.
+                        Se conserva un único perfil por usuario; al guardar se actualizan los datos existentes.
                     </p>
                     <p class="small">
                         Guarda los cambios cuando termines.

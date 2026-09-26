@@ -27,16 +27,6 @@ return new class extends Migration
             if (Schema::hasColumn('profiles', 'nombres_apellidos')) {
                 $table->dropColumn('nombres_apellidos');
             }
-            if (Schema::hasColumn('profiles', 'user_id')) {
-                $table->dropForeign(['user_id']);
-                $table->dropIndex(['user_id']);
-            }
-        });
-
-        Schema::table('profiles', function (Blueprint $table) {
-            if (Schema::hasColumn('profiles', 'user_id')) {
-                $table->foreignId('user_id')->constrained()->onDelete('cascade')->unique();
-            }
         });
     }
 };
