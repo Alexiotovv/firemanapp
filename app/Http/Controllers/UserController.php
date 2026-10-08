@@ -16,7 +16,52 @@ class UserController extends Controller
         $totalCompanies = User::distinct('compania')->count('compania');
         $totalAdmins = User::where('is_admin', true)->count();
         
+        $availability = collect();
+        if (auth()->user()->is_admin) {
+            $categories = \App\Models\AvailabilityCategory::where('activo', true)
+                ->with(['elements' => fn ($q) => $q->orderBy('nombre')])->get()->keyBy('id');
+            $elements = $categories->flatMap->elements;
+            $assigned = \Illuminate\Support\Facades\DB::table('availability_category_user')->get()->groupBy('user_id');
+            $checks = \App\Models\AvailabilityCheck::whereIn('element_id', $elements->pluck('id'))->get()
+                ->keyBy(fn ($c) => $c->user_id . '-' . $c->element_id);
+
+            $availability = User::where('is_admin', false)->orderBy('name')->get()
+                ->groupBy(fn ($usr) => $usr->compania ?: 'Sin compañía')->sortKeys()
+                ->map(function ($users) use ($categories, $checks, $assigned) {
+                    $rows = collect();
+                    foreach ($users as $usr) {
+                        foreach ($assigned->get($usr->id, collect())->pluck('category_id') as $catId) {
+                            $cat = $categories->get($catId);
+                            if (! $cat) { continue; }
+                            foreach ($cat->elements as $el) {
+                                $chk = $checks->get($usr->id . '-' . $el->id);
+                                $rows->push((object) [
+                                    'user' => $usr->name,
+                                    'category' => $cat,
+                                    'nombre' => $el->nombre,
+                                    'disponible' => (bool) ($chk?->disponible),
+                                    'updated_at' => $chk?->updated_at,
+                                ]);
+                            }
+                        }
+                    }
+                    return (object) ['rows' => $rows, 'multi' => $users->count() > 1];
+                })->filter(fn ($g) => $g->rows->isNotEmpty());
+        }
+        $rows = $availability->flatMap(fn ($g) => $g->rows);
+        $stats = [
+            'activas' => \App\Models\Emergency::activas()->count(),
+            'servicio' => $rows->count(),
+            'disponibles' => $rows->where('disponible', true)->count(),
+            'fuera' => $rows->where('disponible', false)->count(),
+            'companias_ok' => $availability->filter(fn ($g) => $g->rows->where('disponible', true)->isNotEmpty())->count(),
+            'companias' => $availability->count(),
+        ];
+
         return view('dashboard.index', [
+            'stats' => $stats,
+            'emergencies' => \App\Models\Emergency::activas()->latest()->get(),
+            'availability' => $availability,
             'totalUsers' => $totalUsers,
             'totalCompanies' => $totalCompanies,
             'totalAdmins' => $totalAdmins,

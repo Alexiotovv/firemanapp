@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("theme") || "light");</script>
     <title>@yield('title', 'SISBOM-XI CD LORETO')</title>
     
     <!-- Bootstrap 5 CSS CDN -->
@@ -158,7 +160,25 @@
                 padding: 1rem !important;
             }
         }
+        /* ===== Tema claro / oscuro ===== */
+        :root {
+            --panel-bg: #ffffff; --panel-border: #e3e8ef; --panel-muted: #64748b; --panel-hover: #f1f5f9;
+            --panel-shadow: 0 2px 10px rgba(16,24,40,.06);
+        }
+        [data-bs-theme="dark"] {
+            --panel-bg: #111c2e; --panel-border: #1f2e47; --panel-muted: #8fa3bf; --panel-hover: #17263d;
+            --panel-shadow: 0 2px 12px rgba(0,0,0,.45);
+        }
+        [data-bs-theme="dark"] body { background-color: #0b1220; }
+        [data-bs-theme="dark"] .bg-white { background-color: var(--panel-bg) !important; }
+        [data-bs-theme="dark"] .card { background-color: var(--panel-bg); border-color: var(--panel-border); }
+        [data-bs-theme="dark"] .table th { background-color: #17263d; color: #e2e8f0; }
+        [data-bs-theme="dark"] .sidebar { background-color: #0d1626; }
+        [data-bs-theme="dark"] .list-group-item { background-color: transparent; }
+        .theme-toggle { background: transparent; border: 1px solid rgba(255,255,255,.55); color: #fff; border-radius: 8px; padding: 3px 10px; }
+        .theme-toggle:hover { background: rgba(255,255,255,.18); color: #fff; }
     </style>
+    @yield('styles')
     
     <!-- jQuery CDN -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -178,6 +198,7 @@
             </a>
             
             <div class="d-flex align-items-center">
+                <button type="button" class="theme-toggle me-3" id="themeToggle" title="Cambiar tema"><i class="bi bi-moon-stars-fill"></i></button>
                 <div class="dropdown">
                     <a href="#" class="nav-link dropdown-toggle text-white" role="button" 
                        data-bs-toggle="dropdown">
@@ -243,7 +264,17 @@
                         <i class="bi bi-ambulance me-2"></i>Emergencias Médicas
                     </a>
                     
+                    @unless(Auth::user()->is_admin)
+                        <a href="{{ route('availability.index') }}" class="{{ request()->routeIs('availability.*') ? 'active' : '' }}">
+                            <i class="bi bi-broadcast me-2"></i>Mi Disponibilidad
+                        </a>
+                    @endunless
+
                     @if(Auth::user()->is_admin)
+                        <a href="{{ route('admin.availability.index') }}" class="{{ request()->routeIs('admin.availability.*') ? 'active' : '' }}">
+                            <i class="bi bi-grid-1x2 me-2"></i>Disponibilidad
+                        </a>
+
                         <a href="{{ route('admin.reports') }}" class="{{ request()->routeIs('admin.reports') ? 'active' : '' }}">
                             <i class="bi bi-file-earmark-bar-graph me-2"></i>Reportes
                         </a>
@@ -330,6 +361,22 @@
     });
     </script>
     
+    <script>
+        (function () {
+            const btn = document.getElementById('themeToggle');
+            if (!btn) return;
+            const icon = btn.querySelector('i');
+            const paint = t => { icon.className = t === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill'; };
+            paint(document.documentElement.getAttribute('data-bs-theme'));
+            btn.addEventListener('click', () => {
+                const t = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-bs-theme', t);
+                localStorage.setItem('theme', t);
+                paint(t);
+                window.dispatchEvent(new CustomEvent('themechange', {detail: t}));
+            });
+        })();
+    </script>
     @yield('scripts')
 </body>
 </html>

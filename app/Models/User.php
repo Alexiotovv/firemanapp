@@ -42,6 +42,11 @@ class User extends Authenticatable
         return $this->is_admin === true;
     }
 
+    public function availabilityCategories()
+    {
+        return $this->belongsToMany(AvailabilityCategory::class, 'availability_category_user', 'user_id', 'category_id')->withTimestamps();
+    }
+
     // Relación con el perfil
     public function profile()
     {

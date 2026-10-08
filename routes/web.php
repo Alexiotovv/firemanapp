@@ -6,6 +6,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ParteIncendioController;
 use App\Http\Controllers\ParteEmergenciaController;
+use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\EmergencyController;
+use App\Http\Controllers\AvailabilityAdminController;
 
 // Rutas públicas
 Route::get('/', function () {
@@ -56,9 +59,32 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{partesIncendio}/imprimir', [ParteIncendioController::class, 'imprimir'])->name('imprimir');
     });
     
+    // Disponibilidad (usuarios no admin)
+    Route::get('/disponibilidad', [AvailabilityController::class, 'index'])->name('availability.index');
+    Route::put('/disponibilidad', [AvailabilityController::class, 'update'])->name('availability.update');
+
     // Rutas solo para administradores
     Route::middleware(['admin'])->group(function () {
         Route::get('/admin/reports', [UserController::class, 'reports'])->name('admin.reports');
+
+        // Emergencias
+        Route::get('/admin/emergencias/create', [EmergencyController::class, 'create'])->name('admin.emergencies.create');
+        Route::post('/admin/emergencias', [EmergencyController::class, 'store'])->name('admin.emergencies.store');
+        Route::patch('/admin/emergencias/{emergency}/estado', [EmergencyController::class, 'updateEstado'])->name('admin.emergencies.estado');
+        Route::delete('/admin/emergencias/{emergency}', [EmergencyController::class, 'destroy'])->name('admin.emergencies.destroy');
+
+        // Módulo dinámico de disponibilidad
+        Route::prefix('admin/disponibilidad')->name('admin.availability.')->group(function () {
+            Route::get('/', [AvailabilityAdminController::class, 'index'])->name('index');
+            Route::get('/usuarios/{user}/asignaciones', [AvailabilityAdminController::class, 'userAssignments'])->name('assignments.show');
+            Route::post('/usuarios/{user}/categorias/{category}', [AvailabilityAdminController::class, 'toggleAssignment'])->name('assignments.toggle');
+            Route::post('/categorias', [AvailabilityAdminController::class, 'storeCategory'])->name('categories.store');
+            Route::patch('/categorias/{category}', [AvailabilityAdminController::class, 'toggleCategory'])->name('categories.toggle');
+            Route::delete('/categorias/{category}', [AvailabilityAdminController::class, 'destroyCategory'])->name('categories.destroy');
+            Route::post('/categorias/{category}/elementos', [AvailabilityAdminController::class, 'storeElement'])->name('elements.store');
+            Route::put('/elementos/{element}', [AvailabilityAdminController::class, 'updateElement'])->name('elements.update');
+            Route::delete('/elementos/{element}', [AvailabilityAdminController::class, 'destroyElement'])->name('elements.destroy');
+        });
 
         // Exportar usuarios (CSV)
         Route::get('/admin/users/export', [UserController::class, 'export'])->name('admin.users.export');
