@@ -1,5 +1,6 @@
 @extends('layouts.app')
-@section('title', 'Nueva emergencia')
+@php $em = $emergency ?? null; @endphp
+@section('title', $em ? 'Editar emergencia' : 'Nueva emergencia')
 
 @section('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -10,15 +11,16 @@
 @endsection
 
 @section('content')
-<h2 class="mb-1"><i class="bi bi-plus-circle me-2"></i>Nueva emergencia</h2>
+<h2 class="mb-1"><i class="bi bi-{{ $em ? 'pencil-square' : 'plus-circle' }} me-2"></i>{{ $em ? 'Editar emergencia #'.$em->numero : 'Nueva emergencia' }}</h2>
 <p class="text-muted">Completa los datos y marca la ubicación en el mapa (haz clic o arrastra el marcador).</p>
 
 @if($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
 
-<form method="POST" action="{{ route('admin.emergencies.store') }}">
+<form method="POST" action="{{ $em ? route('admin.emergencies.update', $em) : route('admin.emergencies.store') }}">
     @csrf
-    <input type="hidden" name="lat" id="lat" value="{{ old('lat') }}">
-    <input type="hidden" name="lng" id="lng" value="{{ old('lng') }}">
+    @if($em) @method('PUT') @endif
+    <input type="hidden" name="lat" id="lat" value="{{ old('lat', $em->lat ?? '') }}">
+    <input type="hidden" name="lng" id="lng" value="{{ old('lng', $em->lng ?? '') }}">
     <div class="row g-4">
         <div class="col-lg-5">
             <div class="card"><div class="card-body row g-3">
@@ -26,7 +28,7 @@
                     <label class="form-label">Tipo</label>
                     <select name="tipo" class="form-select" required>
                         @foreach($tipos as $k => $t)
-                            <option value="{{ $k }}" @selected(old('tipo') === $k)>{{ $t[0] }}</option>
+                            <option value="{{ $k }}" @selected(old('tipo', $em->tipo ?? '') === $k)>{{ $t[0] }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -34,22 +36,29 @@
                     <label class="form-label">Prioridad</label>
                     <select name="prioridad" class="form-select" required>
                         @foreach($prioridades as $k => $label)
-                            <option value="{{ $k }}" @selected(old('prioridad', 'media') === $k)>{{ $label }}</option>
+                            <option value="{{ $k }}" @selected(old('prioridad', $em->prioridad ?? 'media') === $k)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-12"><label class="form-label">Dirección</label>
-                    <input name="direccion" class="form-control" value="{{ old('direccion') }}" required maxlength="255" placeholder="Ej: Jr. Amazonas 123 - Punchana"></div>
+                @if($em)
+                <div class="col-12"><label class="form-label">Estado</label>
+                    <select name="estado" class="form-select" required>
+                        @foreach($estados as $k => $label)
+                            <option value="{{ $k }}" @selected(old('estado', $em->estado) === $k)>{{ $label }}</option>
+                        @endforeach
+                    </select></div>
+                @endif
+                <div class="col-12"><label class="form-label">Dirección</label>                    <input name="direccion" class="form-control" value="{{ old('direccion', $em->direccion ?? '') }}" required maxlength="255" placeholder="Ej: Jr. Amazonas 123 - Punchana"></div>
                 <div class="col-12"><label class="form-label">Referencia</label>
-                    <input name="referencia" class="form-control" value="{{ old('referencia') }}" maxlength="255"></div>
+                    <input name="referencia" class="form-control" value="{{ old('referencia', $em->referencia ?? '') }}" maxlength="255"></div>
                 <div class="col-12"><label class="form-label">Descripción</label>
-                    <textarea name="descripcion" class="form-control" rows="3" maxlength="2000">{{ old('descripcion') }}</textarea></div>
+                    <textarea name="descripcion" class="form-control" rows="3" maxlength="2000">{{ old('descripcion', $em->descripcion ?? '') }}</textarea></div>
                 <div class="col-md-6"><label class="form-label">Llamante</label>
-                    <input name="llamante" class="form-control" value="{{ old('llamante') }}" maxlength="120"></div>
+                    <input name="llamante" class="form-control" value="{{ old('llamante', $em->llamante ?? '') }}" maxlength="120"></div>
                 <div class="col-md-6"><label class="form-label">Teléfono</label>
-                    <input name="telefono" class="form-control" value="{{ old('telefono') }}" maxlength="30"></div>
+                    <input name="telefono" class="form-control" value="{{ old('telefono', $em->telefono ?? '') }}" maxlength="30"></div>
                 <div class="col-12"><label class="form-label">Unidades despachadas</label>
-                    <input name="unidades" class="form-control" value="{{ old('unidades') }}" maxlength="255" placeholder="Ej: M28-1 CIST-11 ESC-13"></div>
+                    <input name="unidades" class="form-control" value="{{ old('unidades', $em->unidades ?? '') }}" maxlength="255" placeholder="Ej: M28-1 CIST-11 ESC-13"></div>
             </div></div>
         </div>
         <div class="col-lg-7">
@@ -61,7 +70,7 @@
         </div>
     </div>
     <div class="mt-4 d-flex gap-2">
-        <button class="btn btn-danger"><i class="bi bi-megaphone me-1"></i>Registrar emergencia</button>
+        <button class="btn btn-danger"><i class="bi bi-{{ $em ? 'save' : 'megaphone' }} me-1"></i>{{ $em ? 'Guardar cambios' : 'Registrar emergencia' }}</button>
         <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">Cancelar</a>
     </div>
 </form>

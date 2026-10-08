@@ -70,6 +70,8 @@ Route::middleware(['auth'])->group(function () {
         // Emergencias
         Route::get('/admin/emergencias/create', [EmergencyController::class, 'create'])->name('admin.emergencies.create');
         Route::post('/admin/emergencias', [EmergencyController::class, 'store'])->name('admin.emergencies.store');
+        Route::get('/admin/emergencias/{emergency}/edit', [EmergencyController::class, 'edit'])->name('admin.emergencies.edit');
+        Route::put('/admin/emergencias/{emergency}', [EmergencyController::class, 'update'])->name('admin.emergencies.update');
         Route::patch('/admin/emergencias/{emergency}/estado', [EmergencyController::class, 'updateEstado'])->name('admin.emergencies.estado');
         Route::delete('/admin/emergencias/{emergency}', [EmergencyController::class, 'destroy'])->name('admin.emergencies.destroy');
 

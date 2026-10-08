@@ -18,7 +18,38 @@ class EmergencyController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        Emergency::create($this->validated($request) + [
+            'numero' => Emergency::nextNumero(),
+            'estado' => 'en_evaluacion',
+            'user_id' => auth()->id(),
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Emergencia registrada.');
+    }
+
+    public function edit(Emergency $emergency)
+    {
+        return view('admin.emergencies.create', [
+            'emergency' => $emergency,
+            'tipos' => Emergency::TIPOS,
+            'prioridades' => Emergency::PRIORIDADES,
+            'estados' => Emergency::ESTADOS,
+        ]);
+    }
+
+    public function update(Request $request, Emergency $emergency)
+    {
+        $data = $this->validated($request) + $request->validate([
+            'estado' => ['required', Rule::in(array_keys(Emergency::ESTADOS))],
+        ]);
+        $emergency->update($data);
+
+        return redirect()->route('dashboard')->with('success', 'Emergencia actualizada.');
+    }
+
+    private function validated(Request $request): array
+    {
+        return $request->validate([
             'tipo' => ['required', Rule::in(array_keys(Emergency::TIPOS))],
             'prioridad' => ['required', Rule::in(array_keys(Emergency::PRIORIDADES))],
             'direccion' => 'required|string|max:255',
@@ -33,16 +64,7 @@ class EmergencyController extends Controller
             'lat.required' => 'Selecciona la ubicación en el mapa.',
             'lng.required' => 'Selecciona la ubicación en el mapa.',
         ]);
-
-        Emergency::create($data + [
-            'numero' => Emergency::nextNumero(),
-            'estado' => 'en_evaluacion',
-            'user_id' => auth()->id(),
-        ]);
-
-        return redirect()->route('dashboard')->with('success', 'Emergencia registrada.');
     }
-
     public function updateEstado(Request $request, Emergency $emergency)
     {
         $data = $request->validate(['estado' => ['required', Rule::in(array_keys(Emergency::ESTADOS))]]);

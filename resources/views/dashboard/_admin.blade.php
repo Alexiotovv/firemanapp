@@ -53,6 +53,7 @@
                                     <option value="{{ $k }}" @selected($e->estado === $k)>{{ $lbl }}</option>
                                 @endforeach
                             </select>
+                            <a href="{{ route('admin.emergencies.edit', $e) }}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
                             <form method="POST" action="{{ route('admin.emergencies.destroy', $e) }}" onsubmit="return confirm('¿Eliminar esta emergencia?')">
                                 @csrf @method('DELETE')
                                 <button class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></button>
