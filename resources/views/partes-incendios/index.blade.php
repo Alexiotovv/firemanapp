@@ -20,6 +20,65 @@
 
     @include('components.alert')
 
+    <div class="card card-bomberos mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-exclamation-octagon me-2"></i>Emergencias</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>N° Parte</th>
+                            <th>Emergencia</th>
+                            <th>Dirección</th>
+                            <th>Estado</th>
+                            @if(auth()->user()->is_admin)<th>Usuario asignado</th>@endif
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($emergencies as $emergency)
+                            <tr>
+                                <td>{{ $emergency->numero }}</td>
+                                <td>{{ $emergency->tipo_label }}</td>
+                                <td>{{ $emergency->direccion }}</td>
+                                <td>{{ $emergency->estado_label }}</td>
+                                @if(auth()->user()->is_admin)
+                                    <td>{{ $emergency->parteUser ? $emergency->parteUser->name.' '.$emergency->parteUser->apellidos : 'Sin asignar' }}</td>
+                                @endif
+                                <td>
+                                    @if($emergency->parteIncendio)
+                                        <a href="{{ route('partes-incendios.show', $emergency->parteIncendio) }}" class="btn btn-sm btn-outline-primary">
+                                            Ver parte
+                                        </a>
+                                    @elseif(!auth()->user()->is_admin && $emergency->estado === 'finalizada' && $emergency->parte_user_id === auth()->id())
+                                        <a href="{{ route('partes-incendios.create', ['emergency_id' => $emergency->id]) }}" class="btn btn-sm btn-danger">
+                                            Completar parte
+                                        </a>
+                                    @else
+                                        <span class="text-muted">Pendiente</span>
+                                    @endif
+                                    @if(auth()->user()->is_admin)
+                                        <a href="{{ route('admin.emergencies.edit', $emergency) }}" class="btn btn-sm btn-outline-secondary ms-1">
+                                            Editar emergencia
+                                        </a>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ auth()->user()->is_admin ? 6 : 5 }}" class="text-center text-muted py-3">
+                                    No hay emergencias asignadas.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <div class="card card-bomberos">
         <div class="card-body">
             <div class="table-responsive">
@@ -38,7 +97,7 @@
                     <tbody>
                         @foreach($partes as $parte)
                         <tr>
-                            <td>#{{ str_pad($parte->numero_parte, 4, '0', STR_PAD_LEFT) }}</td>
+                            <td>{{ $parte->emergency?->numero ?? '#'.str_pad($parte->numero_parte, 4, '0', STR_PAD_LEFT) }}</td>
                             <td>{{ $parte->fecha->format('d/m/Y') }}</td>
                             <td>
                                 <span class="badge bg-info">

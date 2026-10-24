@@ -8,7 +8,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h2 class="mb-0"><i class="bi bi-fire me-2"></i>Parte de Incendio #{{ str_pad($partesIncendio->numero_parte, 4, '0', STR_PAD_LEFT) }}</h2>
+                    <h2 class="mb-0"><i class="bi bi-fire me-2"></i>Parte de Incendio {{ $partesIncendio->emergency?->numero ?? '#'.str_pad($partesIncendio->numero_parte, 4, '0', STR_PAD_LEFT) }}</h2>
                     <p class="text-muted">Fecha: {{ $partesIncendio->fecha->format('d/m/Y') }}</p>
                 </div>
                 <div>

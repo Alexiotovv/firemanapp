@@ -232,7 +232,7 @@
     const LIVE = ['liveStats', 'liveEmList', 'liveResBody', 'liveCards'];
     const csrf = document.querySelector('meta[name="csrf-token"]').content;
     const COLORS = {alta: '#ef4444', media: '#f59e0b', baja: '#22c55e'};
-    let map = null, layer = null, markers = {};
+    let map = null, layer = null, markers = {}, pendingFinalizeSelect = null;
 
     function applyFilter() {
         const sel = document.getElementById('resFilter'); if (!sel) return;
@@ -276,16 +276,78 @@
 
     document.addEventListener('change', async e => {
         const sel = e.target.closest('.em-estado'); if (!sel) return;
+        const estado = sel.value;
+        if (estado === 'finalizada') {
+            const modal = document.getElementById('finalizeEmergencyModal');
+            const userSelect = document.getElementById('finalizeEmergencyUser');
+            const error = document.getElementById('finalizeEmergencyError');
+            const confirmButton = document.getElementById('confirmFinalizeEmergency');
+            pendingFinalizeSelect = sel;
+            userSelect.value = sel.dataset.parteUser || '';
+            userSelect.classList.remove('is-invalid');
+            error.classList.add('d-none');
+            error.textContent = '';
+            const dialog = bootstrap.Modal.getOrCreateInstance(modal);
+            dialog.show();
+
+            confirmButton.onclick = async () => {
+                if (!userSelect.value) {
+                    userSelect.classList.add('is-invalid');
+                    return;
+                }
+
+                confirmButton.disabled = true;
+                sel.disabled = true;
+                try {
+                    const response = await fetch(sel.dataset.url, {
+                        method: 'PATCH',
+                        headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf},
+                        body: JSON.stringify({estado, parte_user_id: userSelect.value})
+                    });
+                    if (!response.ok) {
+                        const payload = await response.json();
+                        throw new Error(payload.message || 'No se pudo actualizar la emergencia.');
+                    }
+                    const payload = await response.json();
+                    sel.dataset.currentState = estado;
+                    sel.dataset.parteUser = payload.parte_user_id;
+                    pendingFinalizeSelect = null;
+                    dialog.hide();
+                    await refresh(true);
+                } catch (errorResponse) {
+                    error.textContent = errorResponse.message || 'No se pudo actualizar la emergencia.';
+                    error.classList.remove('d-none');
+                } finally {
+                    confirmButton.disabled = false;
+                    sel.disabled = false;
+                }
+            };
+            return;
+        }
+
         sel.disabled = true;
         try {
-            const res = await fetch(sel.dataset.url, {
+            const response = await fetch(sel.dataset.url, {
                 method: 'PATCH',
                 headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf},
-                body: JSON.stringify({estado: sel.value})
+                body: JSON.stringify({estado})
             });
-            if (!res.ok) throw new Error();
-        } catch (_) { alert('No se pudo actualizar el estado.'); }
+            if (!response.ok) throw new Error();
+            sel.dataset.currentState = estado;
+        } catch (_) {
+            alert('No se pudo actualizar el estado.');
+            sel.value = sel.dataset.currentState;
+        } finally {
+            sel.disabled = false;
+        }
         await refresh(true);
+    });
+
+    document.getElementById('finalizeEmergencyModal')?.addEventListener('hidden.bs.modal', () => {
+        if (pendingFinalizeSelect) {
+            pendingFinalizeSelect.value = pendingFinalizeSelect.dataset.currentState;
+            pendingFinalizeSelect = null;
+        }
     });
     @endif
 

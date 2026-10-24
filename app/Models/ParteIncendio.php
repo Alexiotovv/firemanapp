@@ -47,6 +47,7 @@ class ParteIncendio extends Model
         'firma_bombero_confecciona',
         'firma_segundo_jefe',
         'user_id',
+        'emergency_id',
         'compania_id',
         'completado',
         'aprobado',
@@ -64,6 +65,11 @@ class ParteIncendio extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function emergency()
+    {
+        return $this->belongsTo(Emergency::class);
     }
 
     // Relación con la compañía

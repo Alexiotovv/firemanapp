@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Emergency;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -13,6 +14,7 @@ class EmergencyController extends Controller
         return view('admin.emergencies.create', [
             'tipos' => Emergency::TIPOS,
             'prioridades' => Emergency::PRIORIDADES,
+            'users' => User::where('is_admin', false)->orderBy('compania')->orderBy('name')->get(),
         ]);
     }
 
@@ -34,6 +36,7 @@ class EmergencyController extends Controller
             'tipos' => Emergency::TIPOS,
             'prioridades' => Emergency::PRIORIDADES,
             'estados' => Emergency::ESTADOS,
+            'users' => User::where('is_admin', false)->orderBy('compania')->orderBy('name')->get(),
         ]);
     }
 
@@ -41,7 +44,22 @@ class EmergencyController extends Controller
     {
         $data = $this->validated($request) + $request->validate([
             'estado' => ['required', Rule::in(array_keys(Emergency::ESTADOS))],
+            'parte_user_id' => [
+                'exclude_unless:estado,finalizada',
+                'required',
+                'integer',
+                Rule::exists('users', 'id')->where('is_admin', 0),
+            ],
         ]);
+
+        if (
+            $emergency->parteIncendio()->exists()
+            && isset($data['parte_user_id'])
+            && (int) $data['parte_user_id'] !== (int) $emergency->parte_user_id
+        ) {
+            return back()->withErrors(['parte_user_id' => 'No se puede cambiar el usuario asignado después de crear el parte.'])->withInput();
+        }
+
         $emergency->update($data);
 
         return redirect()->route('dashboard')->with('success', 'Emergencia actualizada.');
@@ -67,14 +85,34 @@ class EmergencyController extends Controller
     }
     public function updateEstado(Request $request, Emergency $emergency)
     {
-        $data = $request->validate(['estado' => ['required', Rule::in(array_keys(Emergency::ESTADOS))]]);
-        $emergency->update($data);
+        $data = $request->validate([
+            'estado' => ['required', Rule::in(array_keys(Emergency::ESTADOS))],
+            'parte_user_id' => [
+                'exclude_unless:estado,finalizada',
+                'required',
+                'integer',
+                Rule::exists('users', 'id')->where('is_admin', 0),
+            ],
+        ]);
 
-        return response()->json(['ok' => true]);
+        if ($data['estado'] === 'finalizada' && $emergency->parteIncendio()->exists()) {
+            return response()->json(['message' => 'Esta emergencia ya tiene un parte registrado.'], 422);
+        }
+
+        $emergency->update([
+            'estado' => $data['estado'],
+            ...($data['estado'] === 'finalizada' ? ['parte_user_id' => $data['parte_user_id']] : []),
+        ]);
+
+        return response()->json(['ok' => true, 'parte_user_id' => $emergency->parte_user_id]);
     }
 
     public function destroy(Emergency $emergency)
     {
+        if ($emergency->parteIncendio()->exists()) {
+            return back()->with('error', 'No se puede eliminar una emergencia que ya tiene un parte registrado.');
+        }
+
         $emergency->delete();
 
         return back()->with('success', 'Emergencia eliminada.');

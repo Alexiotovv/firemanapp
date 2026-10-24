@@ -31,7 +31,7 @@ class Emergency extends Model
 
     protected $fillable = [
         'numero', 'tipo', 'prioridad', 'estado', 'direccion', 'referencia', 'descripcion',
-        'llamante', 'telefono', 'unidades', 'lat', 'lng', 'user_id',
+        'llamante', 'telefono', 'unidades', 'lat', 'lng', 'user_id', 'parte_user_id',
     ];
 
     protected function casts(): array
@@ -42,6 +42,16 @@ class Emergency extends Model
     public function scopeActivas($query)
     {
         return $query->where('estado', '!=', 'finalizada');
+    }
+
+    public function parteUser()
+    {
+        return $this->belongsTo(User::class, 'parte_user_id');
+    }
+
+    public function parteIncendio()
+    {
+        return $this->hasOne(ParteIncendio::class);
     }
 
     public function getTipoLabelAttribute(): string

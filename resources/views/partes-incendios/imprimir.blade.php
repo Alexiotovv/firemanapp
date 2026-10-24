@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parte de Incendio #{{ str_pad($partesIncendio->numero_parte, 4, '0', STR_PAD_LEFT) }}</title>
+    <title>Parte de Incendio {{ $partesIncendio->emergency?->numero ?? '#'.str_pad($partesIncendio->numero_parte, 4, '0', STR_PAD_LEFT) }}</title>
     <style>
         @media print {
             @page {
@@ -196,7 +196,7 @@
     
     <!-- Encabezado de impresión -->
     <div class="print-header">
-        <strong>Parte de Incendio #{{ str_pad($partesIncendio->numero_parte, 4, '0', STR_PAD_LEFT) }}</strong> | 
+        <strong>Parte de Incendio {{ $partesIncendio->emergency?->numero ?? '#'.str_pad($partesIncendio->numero_parte, 4, '0', STR_PAD_LEFT) }}</strong> |
         Fecha: {{ $partesIncendio->fecha->format('d/m/Y') }} |
         Impreso: {{ date('d/m/Y H:i') }}
     </div>
@@ -209,7 +209,7 @@
         <div class="header">
             <h3>CUERPO GENERAL DE BOMBEROS VOLUNTARIOS DEL PERÚ</h3>
             <h4>XI COMANDANCIA DEPARTAMENTAL DE LORETO</h4>
-            <h5>PARTES DE SERVICIO Nº {{ str_pad($partesIncendio->numero_parte, 4, '0', STR_PAD_LEFT) }}</h5>
+            <h5>PARTES DE SERVICIO Nº {{ $partesIncendio->emergency?->numero ?? str_pad($partesIncendio->numero_parte, 4, '0', STR_PAD_LEFT) }}</h5>
         </div>
         
         <!-- Clasificación del servicio -->
@@ -464,7 +464,7 @@
     // Configuración para impresión
     window.onload = function() {
         // Configurar título de la ventana de impresión
-        document.title = "Parte Incendio #{{ str_pad($partesIncendio->numero_parte, 4, '0', STR_PAD_LEFT) }}";
+        document.title = "Parte Incendio {{ $partesIncendio->emergency?->numero ?? '#'.str_pad($partesIncendio->numero_parte, 4, '0', STR_PAD_LEFT) }}";
     };
     
     // Manejar antes de imprimir

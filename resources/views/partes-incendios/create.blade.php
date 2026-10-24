@@ -7,12 +7,15 @@
     <div class="row mb-4">
         <div class="col-12">
             <h2 class="mb-0"><i class="bi bi-fire me-2"></i>Nuevo Parte de Incendio</h2>
-            <p class="text-muted">Complete todos los campos del formulario</p>
+            <p class="text-muted">Complete todos los campos del formulario{{ $emergency ? ' para la emergencia '.$emergency->numero : '' }}</p>
         </div>
     </div>
 
     <form method="POST" action="{{ route('partes-incendios.store') }}" id="parteForm">
         @csrf
+        @if($emergency)
+            <input type="hidden" name="emergency_id" value="{{ $emergency->id }}">
+        @endif
         
         <div class="card card-bomberos mb-4">
             <div class="card-header bg-white">
@@ -28,14 +31,14 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label class="form-label">N° DE PARTE</label>
-                            <input type="text" class="form-control bg-light" value="AUTOGENERADO" disabled>
-                            <small class="text-muted">Se generará automáticamente</small>
+                            <input type="text" class="form-control bg-light" value="{{ $emergency?->numero ?? 'AUTOGENERADO' }}" disabled>
+                            <small class="text-muted">{{ $emergency ? 'Número de la emergencia asignada' : 'Se generará automáticamente' }}</small>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label class="form-label">FECHA</label>
-                            <input type="date" class="form-control" name="fecha" value="{{ date('Y-m-d') }}" required>
+                            <input type="date" class="form-control" name="fecha" value="{{ old('fecha', $emergency?->created_at->format('Y-m-d') ?? date('Y-m-d')) }}" required>
                         </div>
                     </div>
                 </div>
@@ -156,12 +159,12 @@
             <div class="card-body">
                 <div class="mb-3">
                     <label class="form-label">DIRECCIÓN DE LA EMERGENCIA *</label>
-                    <textarea class="form-control" name="direccion_emergencia" rows="2" required></textarea>
+                    <textarea class="form-control" name="direccion_emergencia" rows="2" required>{{ old('direccion_emergencia', $emergency?->direccion) }}</textarea>
                 </div>
                 
                 <div class="mb-3">
                     <label class="form-label">POSIBLE CAUSA DE LA EMERGENCIA *</label>
-                    <textarea class="form-control" name="causa_emergencia" rows="3" required></textarea>
+                    <textarea class="form-control" name="causa_emergencia" rows="3" required>{{ old('causa_emergencia', $emergency?->descripcion) }}</textarea>
                 </div>
             </div>
         </div>

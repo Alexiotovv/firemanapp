@@ -7,6 +7,33 @@
     })->values();
 @endphp
 
+<div class="modal fade" id="finalizeEmergencyModal" tabindex="-1" aria-labelledby="finalizeEmergencyLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="finalizeEmergencyLabel">Asignar parte de emergencia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Selecciona quién completará el parte de esta emergencia.</p>
+                <label class="form-label" for="finalizeEmergencyUser">Usuario asignado</label>
+                <select class="form-select" id="finalizeEmergencyUser" required>
+                    <option value="">Selecciona un usuario…</option>
+                    @foreach($parteUsers as $user)
+                        <option value="{{ $user->id }}">{{ $user->compania }} - {{ $user->name }} {{ $user->apellidos }}</option>
+                    @endforeach
+                </select>
+                <div class="invalid-feedback">Selecciona un usuario para completar el parte.</div>
+                <div class="alert alert-danger mt-3 d-none" id="finalizeEmergencyError"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmFinalizeEmergency">Finalizar emergencia</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="liveStats" class="row g-2 mb-3">
     @php
         $cards = [
@@ -48,7 +75,10 @@
                         <div class="small dash-muted text-truncate" title="{{ $e->direccion }}">{{ $e->direccion }}</div>
                         @if($e->unidades)<div class="small dash-muted"><i class="bi bi-truck me-1"></i>{{ $e->unidades }}</div>@endif
                         <div class="d-flex gap-1 mt-2 align-items-center">
-                            <select class="form-select form-select-sm em-estado" data-url="{{ route('admin.emergencies.estado', $e) }}">
+                            <select class="form-select form-select-sm em-estado"
+                                    data-url="{{ route('admin.emergencies.estado', $e) }}"
+                                    data-current-state="{{ $e->estado }}"
+                                    data-parte-user="{{ $e->parte_user_id }}">
                                 @foreach(\App\Models\Emergency::ESTADOS as $k => $lbl)
                                     <option value="{{ $k }}" @selected($e->estado === $k)>{{ $lbl }}</option>
                                 @endforeach

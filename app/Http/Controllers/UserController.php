@@ -60,6 +60,9 @@ class UserController extends Controller
         return view('dashboard.index', [
             'stats' => $stats,
             'emergencies' => \App\Models\Emergency::activas()->latest()->get(),
+            'parteUsers' => auth()->user()->is_admin
+                ? User::where('is_admin', false)->orderBy('compania')->orderBy('name')->get(['id', 'name', 'apellidos', 'compania'])
+                : collect(),
             'availability' => $availability,
             'totalUsers' => $totalUsers,
             'totalCompanies' => $totalCompanies,

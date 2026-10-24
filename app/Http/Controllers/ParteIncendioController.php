@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Emergency;
 use App\Models\ParteIncendio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ParteIncendioController extends Controller
 {
@@ -13,25 +15,41 @@ class ParteIncendioController extends Controller
      */
     public function index()
     {
+        $emergencies = Emergency::query()
+            ->when(! Auth::user()->is_admin, fn ($query) => $query->where('parte_user_id', Auth::id()))
+            ->with(['parteUser', 'parteIncendio'])
+            ->latest()
+            ->get();
+
         if (Auth::user()->is_admin) {
             // Admin ve todos los partes
-            $partes = ParteIncendio::orderBy('created_at', 'desc')->get();
+            $partes = ParteIncendio::with('emergency')->orderBy('created_at', 'desc')->get();
         } else {
             // Usuario regular ve solo sus partes
-            $partes = ParteIncendio::where('user_id', Auth::id())
+            $partes = ParteIncendio::with('emergency')->where('user_id', Auth::id())
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
         
-        return view('partes-incendios.index', compact('partes'));
+        return view('partes-incendios.index', compact('partes', 'emergencies'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        return view('partes-incendios.create');
+        $emergency = null;
+
+        if ($request->filled('emergency_id')) {
+            $emergency = Emergency::whereKey($request->integer('emergency_id'))
+                ->where('estado', 'finalizada')
+                ->where('parte_user_id', Auth::id())
+                ->whereDoesntHave('parteIncendio')
+                ->firstOrFail();
+        }
+
+        return view('partes-incendios.create', compact('emergency'));
     }
 
     /**
@@ -91,20 +109,8 @@ class ParteIncendioController extends Controller
             'firma_bombero_mando' => 'nullable|string|max:255',
             'firma_bombero_confecciona' => 'required|string|max:255',
             'firma_segundo_jefe' => 'nullable|string|max:255',
+            'emergency_id' => 'nullable|integer|exists:emergencies,id',
         ]);
-
-        // Generar número de parte
-        $ultimoNumero = ParteIncendio::max('numero_parte') ?? 0;
-        $validated['numero_parte'] = $ultimoNumero + 1;
-        
-        // Agregar información del usuario
-        $validated['user_id'] = Auth::id();
-        $validated['compania_id'] = Auth::user()->compania_id ?? Auth::id();
-        
-        // Si el usuario no es admin, el parte se marca como completado
-        if (!Auth::user()->is_admin) {
-            $validated['completado'] = true;
-        }
 
         // Convertir arrays a JSON
         if (isset($validated['personas_lesionadas'])) {
@@ -115,8 +121,30 @@ class ParteIncendioController extends Controller
             $validated['personal_asistente'] = json_encode($validated['personal_asistente']);
         }
 
-        // Crear el parte
-        $parte = ParteIncendio::create($validated);
+        $emergencyId = $validated['emergency_id'] ?? null;
+        unset($validated['emergency_id']);
+
+        $parte = DB::transaction(function () use ($validated, $emergencyId) {
+            $emergency = $emergencyId ? Emergency::whereKey($emergencyId)->lockForUpdate()->firstOrFail() : null;
+
+            if ($emergency && (
+                $emergency->estado !== 'finalizada'
+                || $emergency->parte_user_id !== Auth::id()
+                || $emergency->parteIncendio()->exists()
+            )) {
+                abort(403, 'No tienes permiso para completar esta emergencia o ya tiene un parte.');
+            }
+
+            $validated['numero_parte'] = $emergency
+                ? (int) preg_replace('/\D/', '', $emergency->numero)
+                : ((ParteIncendio::max('numero_parte') ?? 0) + 1);
+            $validated['emergency_id'] = $emergency?->id;
+            $validated['user_id'] = Auth::id();
+            $validated['compania_id'] = Auth::user()->compania_id ?? Auth::id();
+            $validated['completado'] = ! Auth::user()->is_admin;
+
+            return ParteIncendio::create($validated);
+        });
 
         return redirect()->route('partes-incendios.show', $parte)
             ->with('success', 'Parte de incendio creado exitosamente.');
