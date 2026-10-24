@@ -160,7 +160,7 @@
                                                 data-numero="{{ $parte->emergency?->numero ?? '#'.str_pad($parte->numero_parte, 4, '0', STR_PAD_LEFT) }}"
                                                 title="Eliminar">
                                                 <i class="bi bi-trash"></i>
-                                                <span class="d-none d-md-inline ms-1">Eliminar</span>
+                                                <span class="ms-1">Eliminar</span>
                                             </button>
                                     @endif
                                 </div>
