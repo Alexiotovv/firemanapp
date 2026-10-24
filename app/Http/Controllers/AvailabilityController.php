@@ -16,8 +16,9 @@ class AvailabilityController extends Controller
             ->filter(fn ($c) => $c->elements->isNotEmpty());
 
         $checks = AvailabilityCheck::where('user_id', auth()->id())->pluck('disponible', 'element_id');
+        $enEmergencia = AvailabilityCheck::where('user_id', auth()->id())->where('en_emergencia', true)->pluck('element_id')->flip();
 
-        return view('availability.index', compact('categories', 'checks'));
+        return view('availability.index', compact('categories', 'checks', 'enEmergencia'));
     }
 
     public function update(Request $request)
@@ -31,7 +32,9 @@ class AvailabilityController extends Controller
         $elements = auth()->user()->availabilityCategories()->where('activo', true)->with('elements')->get()
             ->flatMap->elements;
 
-        foreach ($elements as $el) {
+        $locked = AvailabilityCheck::where('user_id', auth()->id())->where('en_emergencia', true)->pluck('element_id');
+
+        foreach ($elements->whereNotIn('id', $locked) as $el) {
             AvailabilityCheck::updateOrCreate(
                 ['element_id' => $el->id, 'user_id' => auth()->id()],
                 ['disponible' => $checked->contains($el->id)]

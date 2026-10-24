@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Emergency extends Model
 {
@@ -42,6 +43,52 @@ class Emergency extends Model
     public function scopeActivas($query)
     {
         return $query->where('estado', '!=', 'finalizada');
+    }
+
+    public function elements()
+    {
+        return $this->belongsToMany(AvailabilityElement::class, 'emergency_element', 'emergency_id', 'element_id')->withTimestamps();
+    }
+
+    // Sincroniza los vehículos; solo quedan "en emergencia" mientras la emergencia no esté finalizada.
+    public function syncVehicles(array $elementIds, bool $active = true): void
+    {
+        $changes = $this->elements()->sync($elementIds);
+        $this->setElementsEnEmergencia($changes['detached'], false);
+        $this->setElementsEnEmergencia($elementIds, $active);
+        $this->refreshUnidades();
+    }
+
+    public function setVehiclesActive(bool $active): void
+    {
+        $this->setElementsEnEmergencia($this->elements()->pluck('availability_elements.id')->all(), $active);
+    }
+
+    private function setElementsEnEmergencia(array $ids, bool $value): void
+    {
+        if ($value === false && $ids) {
+            $busy = DB::table('emergency_element')
+                ->join('emergencies', 'emergencies.id', '=', 'emergency_element.emergency_id')
+                ->where('emergencies.estado', '!=', 'finalizada')
+                ->where('emergencies.id', '!=', $this->id)
+                ->whereIn('emergency_element.element_id', $ids)
+                ->pluck('emergency_element.element_id')->all();
+            $ids = array_diff($ids, $busy);
+        }
+        if ($ids) {
+            if ($value) {
+                AvailabilityElement::with('category')->whereIn('id', $ids)->get()->each(fn ($el) => AvailabilityCheck::firstOrCreate(
+                    ['element_id' => $el->id, 'user_id' => $el->category->user_id],
+                    ['disponible' => true]
+                ));
+            }
+            AvailabilityCheck::whereIn('element_id', $ids)->update(['en_emergencia' => $value]);
+        }
+    }
+
+    private function refreshUnidades(): void
+    {
+        $this->update(['unidades' => $this->elements()->orderBy('nombre')->pluck('nombre')->implode(' ') ?: null]);
     }
 
     public function parteUser()

@@ -19,8 +19,9 @@
                 @foreach($cat->elements as $el)
                     <li class="list-group-item">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="elements[]" value="{{ $el->id }}" id="el{{ $el->id }}" @checked($checks[$el->id] ?? false)>
-                            <label class="form-check-label" for="el{{ $el->id }}">{{ $el->nombre }}</label>
+                            <input class="form-check-input" type="checkbox" role="switch" name="elements[]" value="{{ $el->id }}" id="el{{ $el->id }}" @checked($checks[$el->id] ?? false) @disabled($enEmergencia->has($el->id))>
+                            <label class="form-check-label" for="el{{ $el->id }}">{{ $el->nombre }}
+                                @if($enEmergencia->has($el->id))<span class="badge bg-warning text-dark ms-2">En emergencia</span>@endif</label>
                         </div>
                     </li>
                 @endforeach

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AvailabilityElement;
 use App\Models\Emergency;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class EmergencyController extends Controller
 {
@@ -15,28 +17,48 @@ class EmergencyController extends Controller
             'tipos' => Emergency::TIPOS,
             'prioridades' => Emergency::PRIORIDADES,
             'users' => User::where('is_admin', false)->orderBy('compania')->orderBy('name')->get(),
+            'vehicles' => $this->availableVehicles(),
+            'selectedVehicles' => [],
         ]);
+    }
+
+    private function parteUserRules(bool $requiredIfFinalizada): array
+    {
+        return [
+            $requiredIfFinalizada ? 'required_if:estado,finalizada' : 'nullable',
+            'nullable',
+            'integer',
+            Rule::exists('users', 'id')->where('is_admin', 0),
+        ];
     }
 
     public function store(Request $request)
     {
-        Emergency::create($this->validated($request) + [
+        $data = $this->validated($request) + $request->validate(['parte_user_id' => $this->parteUserRules(false)]);
+        $vehicleIds = $this->validatedVehicles($request);
+
+        $emergency = Emergency::create($data + [
             'numero' => Emergency::nextNumero(),
             'estado' => 'en_evaluacion',
             'user_id' => auth()->id(),
         ]);
+        $emergency->syncVehicles($vehicleIds);
 
         return redirect()->route('dashboard')->with('success', 'Emergencia registrada.');
     }
 
     public function edit(Emergency $emergency)
     {
+        $selected = $emergency->elements()->pluck('availability_elements.id')->all();
+
         return view('admin.emergencies.create', [
             'emergency' => $emergency,
             'tipos' => Emergency::TIPOS,
             'prioridades' => Emergency::PRIORIDADES,
             'estados' => Emergency::ESTADOS,
             'users' => User::where('is_admin', false)->orderBy('compania')->orderBy('name')->get(),
+            'vehicles' => $this->availableVehicles($selected),
+            'selectedVehicles' => $selected,
         ]);
     }
 
@@ -44,13 +66,9 @@ class EmergencyController extends Controller
     {
         $data = $this->validated($request) + $request->validate([
             'estado' => ['required', Rule::in(array_keys(Emergency::ESTADOS))],
-            'parte_user_id' => [
-                'exclude_unless:estado,finalizada',
-                'required',
-                'integer',
-                Rule::exists('users', 'id')->where('is_admin', 0),
-            ],
+            'parte_user_id' => $this->parteUserRules(true),
         ]);
+        $vehicleIds = $this->validatedVehicles($request, $emergency);
 
         if (
             $emergency->parteIncendio()->exists()
@@ -60,9 +78,47 @@ class EmergencyController extends Controller
             return back()->withErrors(['parte_user_id' => 'No se puede cambiar el usuario asignado después de crear el parte.'])->withInput();
         }
 
+        if ($emergency->parteIncendio()->exists()) {
+            unset($data['parte_user_id']);
+        }
+
         $emergency->update($data);
+        $emergency->syncVehicles($vehicleIds, $emergency->estado !== 'finalizada');
 
         return redirect()->route('dashboard')->with('success', 'Emergencia actualizada.');
+    }
+
+    // Vehículos (elementos de categorías de disponibilidad) de usuarios no admin que están disponibles.
+    // Todos los elementos de usuarios no admin; `libre` indica si se pueden despachar.
+    private function availableVehicles(array $include = [])
+    {
+        return AvailabilityElement::with(['category.user', 'checks'])
+            ->whereHas('category', fn ($q) => $q->where('activo', true)
+                ->whereHas('user', fn ($u) => $u->where('is_admin', false)))
+            ->orderBy('nombre')->get()
+            ->each(function ($el) use ($include) {
+                $chk = $el->checks->firstWhere('user_id', $el->category->user_id);
+                $el->libre = in_array($el->id, $include) || ($chk && $chk->disponible && ! $chk->en_emergencia);
+                $el->motivo = $chk?->en_emergencia ? 'En emergencia' : 'No disponible';
+            })
+            ->groupBy(fn ($el) => $el->category->user->compania ?: 'Sin compañía')->sortKeys();
+    }
+
+    private function validatedVehicles(Request $request, ?Emergency $emergency = null): array
+    {
+        $ids = $request->validate([
+            'elementos' => 'nullable|array',
+            'elementos.*' => 'integer',
+        ])['elementos'] ?? [];
+
+        $current = $emergency ? $emergency->elements()->pluck('availability_elements.id')->all() : [];
+        $allowed = $this->availableVehicles($current)->flatten()->where('libre', true)->pluck('id')->all();
+
+        if (array_diff($ids, $allowed)) {
+            throw ValidationException::withMessages(['elementos' => 'Alguno de los vehículos seleccionados ya no está disponible.']);
+        }
+
+        return array_values(array_unique($ids));
     }
 
     private function validated(Request $request): array
@@ -75,7 +131,6 @@ class EmergencyController extends Controller
             'descripcion' => 'nullable|string|max:2000',
             'llamante' => 'nullable|string|max:120',
             'telefono' => 'nullable|string|max:30',
-            'unidades' => 'nullable|string|max:255',
             'lat' => 'required|numeric|between:-90,90',
             'lng' => 'required|numeric|between:-180,180',
         ], [
@@ -104,6 +159,8 @@ class EmergencyController extends Controller
             ...($data['estado'] === 'finalizada' ? ['parte_user_id' => $data['parte_user_id']] : []),
         ]);
 
+        $emergency->setVehiclesActive($data['estado'] !== 'finalizada');
+
         return response()->json(['ok' => true, 'parte_user_id' => $emergency->parte_user_id]);
     }
 
@@ -131,6 +188,7 @@ class EmergencyController extends Controller
             return back()->with('error', 'No se puede eliminar una emergencia que ya tiene un parte registrado.');
         }
 
+        $emergency->setVehiclesActive(false);
         $emergency->delete();
 
         return back()->with('success', 'Emergencia eliminada.');

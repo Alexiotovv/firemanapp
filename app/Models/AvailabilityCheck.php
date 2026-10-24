@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class AvailabilityCheck extends Model
 {
-    protected $fillable = ['element_id', 'user_id', 'disponible'];
+    protected $fillable = ['element_id', 'user_id', 'disponible', 'en_emergencia'];
 
     protected function casts(): array
     {
-        return ['disponible' => 'boolean'];
+        return ['disponible' => 'boolean', 'en_emergencia' => 'boolean'];
     }
 
     public function element()

@@ -38,7 +38,8 @@ class UserController extends Controller
                                     'user' => $usr->name,
                                     'category' => $cat,
                                     'nombre' => $el->nombre,
-                                    'disponible' => (bool) ($chk?->disponible),
+                                    'disponible' => (bool) ($chk?->disponible) && ! $chk->en_emergencia,
+                                    'en_emergencia' => (bool) ($chk?->en_emergencia),
                                     'updated_at' => $chk?->updated_at,
                                 ]);
                             }

@@ -47,17 +47,20 @@
                             <option value="{{ $k }}" @selected(old('estado', $em->estado) === $k)>{{ $label }}</option>
                         @endforeach
                     </select>
-                    <label class="form-label mt-2">Usuario que completará el parte</label>
-                    <select name="parte_user_id" class="form-select" @required(old('estado', $em->estado) === 'finalizada')>
-                        <option value="">Selecciona un usuario al finalizar</option>
+                </div>
+                @endif
+                <div class="col-12">
+                    <label class="form-label">Usuario asignado (completará el parte)</label>
+                    <select name="parte_user_id" class="form-select" @required(old('estado', $em->estado ?? '') === 'finalizada')>
+                        <option value="">Selecciona un usuario</option>
                         @foreach($users as $user)
-                            <option value="{{ $user->id }}" @selected((int) old('parte_user_id', $em->parte_user_id) === $user->id)>
+                            <option value="{{ $user->id }}" @selected((int) old('parte_user_id', $em->parte_user_id ?? 0) === $user->id)>
                                 {{ $user->compania }} - {{ $user->name }} {{ $user->apellidos }}
                             </option>
                         @endforeach
                     </select>
+                    <div class="form-text">Al elegir un usuario se muestran sus vehículos disponibles.</div>
                 </div>
-                @endif
                 <div class="col-12"><label class="form-label">Dirección</label>                    <input name="direccion" class="form-control" value="{{ old('direccion', $em->direccion ?? '') }}" required maxlength="255" placeholder="Ej: Jr. Amazonas 123 - Punchana"></div>
                 <div class="col-12"><label class="form-label">Referencia</label>
                     <input name="referencia" class="form-control" value="{{ old('referencia', $em->referencia ?? '') }}" maxlength="255"></div>
@@ -67,8 +70,25 @@
                     <input name="llamante" class="form-control" value="{{ old('llamante', $em->llamante ?? '') }}" maxlength="120"></div>
                 <div class="col-md-6"><label class="form-label">Teléfono</label>
                     <input name="telefono" class="form-control" value="{{ old('telefono', $em->telefono ?? '') }}" maxlength="30"></div>
-                <div class="col-12"><label class="form-label">Unidades despachadas</label>
-                    <input name="unidades" class="form-control" value="{{ old('unidades', $em->unidades ?? '') }}" maxlength="255" placeholder="Ej: M28-1 CIST-11 ESC-13"></div>
+                <div class="col-12"><label class="form-label">Vehículos despachados</label>
+                    @php $sel = array_map('intval', (array) old('elementos', $selectedVehicles)); @endphp
+                    @if($vehicles->isEmpty())
+                        <div class="form-text">No hay vehículos disponibles.</div>
+                    @else
+                    <div class="border rounded p-2" style="max-height:220px;overflow-y:auto">
+                        @foreach($vehicles as $compania => $items)
+                            <div class="fw-bold small text-uppercase mt-1 veh-group">{{ $compania }}</div>
+                            @foreach($items as $el)
+                                <div class="form-check veh-item" data-user="{{ $el->category->user_id }}">
+                                    <input class="form-check-input" type="checkbox" name="elementos[]" value="{{ $el->id }}" id="veh{{ $el->id }}" @checked(in_array($el->id, $sel)) @disabled(! $el->libre)>
+                                    <label class="form-check-label" for="veh{{ $el->id }}">{{ $el->nombre }} <small class="text-muted">· {{ $el->category->nombre }}</small>
+                                        @if(! $el->libre)<span class="badge bg-secondary ms-1">{{ $el->motivo }}</span>@endif</label>
+                                </div>
+                            @endforeach
+                        @endforeach
+                    </div>
+                    @endif
+                </div>
             </div></div>
         </div>
         <div class="col-lg-7">
@@ -99,6 +119,21 @@
     };
     stateSelect?.addEventListener('change', syncUserRequirement);
     syncUserRequirement();
+    const filterVehicles = (clear) => {
+        const uid = userSelect?.value;
+        document.querySelectorAll('.veh-item').forEach(item => {
+            const show = !uid || item.dataset.user === uid;
+            if (!show && clear) item.querySelector('input').checked = false;
+            item.classList.toggle('d-none', !show);
+        });
+        document.querySelectorAll('.veh-group').forEach(g => {
+            let n = g.nextElementSibling, any = false;
+            while (n && n.classList.contains('veh-item')) { if (!n.classList.contains('d-none')) any = true; n = n.nextElementSibling; }
+            g.classList.toggle('d-none', !any);
+        });
+    };
+    userSelect?.addEventListener('change', () => filterVehicles(true));
+    filterVehicles(false);
     const map = L.map('pickMap').setView(DEFAULT, 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap'}).addTo(map);
     let marker = null;

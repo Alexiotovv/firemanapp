@@ -31,10 +31,10 @@
                 </div>
                 @foreach($g->rows as $row)
                     <div class="res-row">
-                        <span class="res-dot {{ $row->disponible ? 'success' : 'danger' }}"></span>
+                        <span class="res-dot {{ $row->en_emergencia ? 'warning' : ($row->disponible ? 'success' : 'danger') }}"></span>
                         <span class="text-truncate" title="{{ $row->category->nombre }}@if($g->multi) · {{ $row->user }}@endif"><strong>{{ $row->nombre }}</strong>
                             <small class="dash-muted">· {{ $row->category->nombre }}</small></span>
-                        <span class="res-status {{ $row->disponible ? 'success' : 'danger' }}">{{ $row->disponible ? 'Disponible' : 'No disponible' }}</span>
+                        <span class="res-status {{ $row->en_emergencia ? 'warning' : ($row->disponible ? 'success' : 'danger') }}">{{ $row->en_emergencia ? 'En emergencia' : ($row->disponible ? 'Disponible' : 'No disponible') }}</span>
                     </div>
                 @endforeach
             </div>
