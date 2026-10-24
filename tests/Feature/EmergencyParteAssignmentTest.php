@@ -124,6 +124,33 @@ class EmergencyParteAssignmentTest extends TestCase
             ->assertSee('Completar parte');
     }
 
+    public function test_admin_sees_delete_button_before_the_part_is_completed(): void
+    {
+        $admin = $this->createUser('admin', true);
+        $assignedUser = $this->createUser('asignado');
+        $emergency = $this->createEmergency($admin, [
+            'estado' => 'finalizada',
+            'parte_user_id' => $assignedUser->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('partes-incendios.index'))
+            ->assertOk()
+            ->assertSee('delete-parte-incendio')
+            ->assertSee(route('admin.emergencies.destroy', $emergency));
+
+        $this->actingAs($assignedUser)
+            ->get(route('partes-incendios.index'))
+            ->assertOk()
+            ->assertDontSee(route('admin.emergencies.destroy', $emergency));
+
+        $this->actingAs($admin)
+            ->delete(route('admin.emergencies.destroy', $emergency))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('emergencies', ['id' => $emergency->id]);
+    }
+
     private function createUser(string $identifier, bool $isAdmin = false): User
     {
         return User::create([

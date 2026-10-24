@@ -81,6 +81,14 @@
                                         <a href="{{ route('admin.emergencies.edit', $emergency) }}" class="btn btn-sm btn-outline-secondary ms-1">
                                             Editar emergencia
                                         </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger ms-1 delete-parte-incendio"
+                                                data-action="{{ $emergency->parteIncendio ? route('partes-incendios.destroy', $emergency->parteIncendio) : route('admin.emergencies.destroy', $emergency) }}"
+                                                data-numero="{{ $emergency->numero }}"
+                                                data-tipo="{{ $emergency->parteIncendio ? 'el parte de incendio' : 'la emergencia' }}"
+                                                title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                            <span class="ms-1">Eliminar</span>
+                                        </button>
                                     @endif
                                 </td>
                             </tr>
@@ -156,7 +164,8 @@
                                     
                                     @if(auth()->user()->is_admin)
                                         <button type="button" class="btn btn-sm btn-outline-danger delete-parte-incendio"
-                                                data-id="{{ $parte->id }}"
+                                                data-action="{{ route('partes-incendios.destroy', $parte) }}"
+                                                data-tipo="el parte de incendio"
                                                 data-numero="{{ $parte->emergency?->numero ?? '#'.str_pad($parte->numero_parte, 4, '0', STR_PAD_LEFT) }}"
                                                 title="Eliminar">
                                                 <i class="bi bi-trash"></i>
@@ -195,14 +204,12 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-                <p>¿Estás seguro de eliminar el parte de incendio <strong id="parteIncendioNumero"></strong>?</p>
+                <p>¿Estás seguro de eliminar <span id="parteIncendioTipo"></span> <strong id="parteIncendioNumero"></strong>?</p>
                 <p class="text-danger mb-0"><small>Esta acción no se puede deshacer.</small></p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form id="deleteParteIncendioForm" method="POST"
-                      action="{{ route('partes-incendios.destroy', ['partesIncendio' => '__PARTE_ID__']) }}"
-                      data-action="{{ route('partes-incendios.destroy', ['partesIncendio' => '__PARTE_ID__']) }}">
+                <form id="deleteParteIncendioForm" method="POST">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger">
@@ -220,14 +227,9 @@
 <script>
 $(document).ready(function() {
     $('.delete-parte-incendio').click(function() {
-        const parteId = $(this).data('id');
-        const parteNumero = $(this).data('numero');
-
-        $('#parteIncendioNumero').text(parteNumero);
-        $('#deleteParteIncendioForm').attr(
-            'action',
-            $('#deleteParteIncendioForm').data('action').replace('__PARTE_ID__', parteId)
-        );
+        $('#parteIncendioTipo').text($(this).data('tipo'));
+        $('#parteIncendioNumero').text($(this).data('numero'));
+        $('#deleteParteIncendioForm').attr('action', $(this).data('action'));
         $('#deleteParteIncendioModal').modal('show');
     });
 
