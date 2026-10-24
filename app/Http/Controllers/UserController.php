@@ -21,17 +21,16 @@ class UserController extends Controller
             $categories = \App\Models\AvailabilityCategory::where('activo', true)
                 ->with(['elements' => fn ($q) => $q->orderBy('nombre')])->get()->keyBy('id');
             $elements = $categories->flatMap->elements;
-            $assigned = \Illuminate\Support\Facades\DB::table('availability_category_user')->get()->groupBy('user_id');
             $checks = \App\Models\AvailabilityCheck::whereIn('element_id', $elements->pluck('id'))->get()
                 ->keyBy(fn ($c) => $c->user_id . '-' . $c->element_id);
 
-            $availability = User::where('is_admin', false)->orderBy('name')->get()
+            $availability = User::where('is_admin', false)->with('availabilityCategories')->orderBy('name')->get()
                 ->groupBy(fn ($usr) => $usr->compania ?: 'Sin compañía')->sortKeys()
-                ->map(function ($users) use ($categories, $checks, $assigned) {
+                ->map(function ($users) use ($categories, $checks) {
                     $rows = collect();
                     foreach ($users as $usr) {
-                        foreach ($assigned->get($usr->id, collect())->pluck('category_id') as $catId) {
-                            $cat = $categories->get($catId);
+                        foreach ($usr->availabilityCategories as $userCategory) {
+                            $cat = $categories->get($userCategory->id);
                             if (! $cat) { continue; }
                             foreach ($cat->elements as $el) {
                                 $chk = $checks->get($usr->id . '-' . $el->id);

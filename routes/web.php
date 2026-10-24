@@ -78,9 +78,8 @@ Route::middleware(['auth'])->group(function () {
         // Módulo dinámico de disponibilidad
         Route::prefix('admin/disponibilidad')->name('admin.availability.')->group(function () {
             Route::get('/', [AvailabilityAdminController::class, 'index'])->name('index');
-            Route::get('/usuarios/{user}/asignaciones', [AvailabilityAdminController::class, 'userAssignments'])->name('assignments.show');
-            Route::post('/usuarios/{user}/categorias/{category}', [AvailabilityAdminController::class, 'toggleAssignment'])->name('assignments.toggle');
             Route::post('/categorias', [AvailabilityAdminController::class, 'storeCategory'])->name('categories.store');
+            Route::post('/categorias/{category}/copiar', [AvailabilityAdminController::class, 'copyTemplate'])->name('categories.copy');
             Route::patch('/categorias/{category}', [AvailabilityAdminController::class, 'toggleCategory'])->name('categories.toggle');
             Route::delete('/categorias/{category}', [AvailabilityAdminController::class, 'destroyCategory'])->name('categories.destroy');
             Route::post('/categorias/{category}/elementos', [AvailabilityAdminController::class, 'storeElement'])->name('elements.store');
@@ -115,4 +114,3 @@ Route::middleware(['auth'])->prefix('partes-emergencias')->name('partes-emergenc
     Route::post('/{partesEmergencia}/aprobar', [ParteEmergenciaController::class, 'aprobar'])->name('aprobar');
     Route::get('/{partesEmergencia}/imprimir', [ParteEmergenciaController::class, 'imprimir'])->name('imprimir');
 });
-

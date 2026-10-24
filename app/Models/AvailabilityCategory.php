@@ -13,9 +13,9 @@ class AvailabilityCategory extends Model
         return ['activo' => 'boolean'];
     }
 
-    public function users()
+    public function user()
     {
-        return $this->belongsToMany(User::class, 'availability_category_user', 'category_id', 'user_id')->withTimestamps();
+        return $this->belongsTo(User::class);
     }
 
     public function elements()

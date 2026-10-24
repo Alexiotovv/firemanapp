@@ -44,7 +44,7 @@ class User extends Authenticatable
 
     public function availabilityCategories()
     {
-        return $this->belongsToMany(AvailabilityCategory::class, 'availability_category_user', 'user_id', 'category_id')->withTimestamps();
+        return $this->hasMany(AvailabilityCategory::class);
     }
 
     // Relación con el perfil
