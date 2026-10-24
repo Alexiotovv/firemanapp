@@ -93,6 +93,37 @@ class EmergencyParteAssignmentTest extends TestCase
             ->assertSee('asignado');
     }
 
+    public function test_admin_can_assign_a_part_user_after_an_emergency_was_already_finalized(): void
+    {
+        $admin = $this->createUser('admin', true);
+        $assignedUser = $this->createUser('asignado');
+        $emergency = $this->createEmergency($admin, ['estado' => 'finalizada']);
+
+        $this->actingAs($admin)
+            ->get(route('partes-incendios.index'))
+            ->assertOk()
+            ->assertSee('Seleccionar usuario')
+            ->assertSee(route('admin.emergencies.assign-parte', $emergency));
+
+        $this->actingAs($admin)
+            ->patch(route('admin.emergencies.assign-parte', $emergency), [
+                'parte_user_id' => $assignedUser->id,
+            ])
+            ->assertRedirect(route('partes-incendios.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('emergencies', [
+            'id' => $emergency->id,
+            'parte_user_id' => $assignedUser->id,
+        ]);
+
+        $this->actingAs($assignedUser)
+            ->get(route('partes-incendios.index'))
+            ->assertOk()
+            ->assertSee($emergency->numero)
+            ->assertSee('Completar parte');
+    }
+
     private function createUser(string $identifier, bool $isAdmin = false): User
     {
         return User::create([

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Emergency;
 use App\Models\ParteIncendio;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,14 +25,19 @@ class ParteIncendioController extends Controller
         if (Auth::user()->is_admin) {
             // Admin ve todos los partes
             $partes = ParteIncendio::with('emergency')->orderBy('created_at', 'desc')->get();
+            $parteUsers = User::where('is_admin', false)
+                ->orderBy('compania')
+                ->orderBy('name')
+                ->get(['id', 'name', 'apellidos', 'compania']);
         } else {
             // Usuario regular ve solo sus partes
             $partes = ParteIncendio::with('emergency')->where('user_id', Auth::id())
                 ->orderBy('created_at', 'desc')
                 ->get();
+            $parteUsers = collect();
         }
         
-        return view('partes-incendios.index', compact('partes', 'emergencies'));
+        return view('partes-incendios.index', compact('partes', 'emergencies', 'parteUsers'));
     }
 
     /**

@@ -45,7 +45,25 @@
                                 <td>{{ $emergency->direccion }}</td>
                                 <td>{{ $emergency->estado_label }}</td>
                                 @if(auth()->user()->is_admin)
-                                    <td>{{ $emergency->parteUser ? $emergency->parteUser->name.' '.$emergency->parteUser->apellidos : 'Sin asignar' }}</td>
+                                    <td>
+                                        @if($emergency->estado === 'finalizada' && !$emergency->parteIncendio)
+                                            <form method="POST" action="{{ route('admin.emergencies.assign-parte', $emergency) }}" class="d-flex gap-2">
+                                                @csrf
+                                                @method('PATCH')
+                                                <select name="parte_user_id" class="form-select form-select-sm" required>
+                                                    <option value="">Seleccionar usuario…</option>
+                                                    @foreach($parteUsers as $user)
+                                                        <option value="{{ $user->id }}" @selected($emergency->parte_user_id === $user->id)>
+                                                            {{ $user->compania }} - {{ $user->name }} {{ $user->apellidos }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <button class="btn btn-sm btn-outline-primary">Asignar</button>
+                                            </form>
+                                        @else
+                                            {{ $emergency->parteUser ? $emergency->parteUser->name.' '.$emergency->parteUser->apellidos : 'Sin asignar' }}
+                                        @endif
+                                    </td>
                                 @endif
                                 <td>
                                     @if($emergency->parteIncendio)

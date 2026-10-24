@@ -107,6 +107,24 @@ class EmergencyController extends Controller
         return response()->json(['ok' => true, 'parte_user_id' => $emergency->parte_user_id]);
     }
 
+    public function assignParteUser(Request $request, Emergency $emergency)
+    {
+        abort_unless($emergency->estado === 'finalizada', 422, 'Solo se puede asignar el parte de una emergencia finalizada.');
+        abort_if($emergency->parteIncendio()->exists(), 422, 'Esta emergencia ya tiene un parte registrado.');
+
+        $data = $request->validate([
+            'parte_user_id' => [
+                'required',
+                'integer',
+                Rule::exists('users', 'id')->where('is_admin', 0),
+            ],
+        ]);
+
+        $emergency->update(['parte_user_id' => $data['parte_user_id']]);
+
+        return back()->with('success', 'Usuario asignado para completar el parte de la emergencia.');
+    }
+
     public function destroy(Emergency $emergency)
     {
         if ($emergency->parteIncendio()->exists()) {
