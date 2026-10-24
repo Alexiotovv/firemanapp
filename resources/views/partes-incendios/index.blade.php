@@ -155,15 +155,13 @@
                                     </a>
                                     
                                     @if(auth()->user()->is_admin)
-                                        <form action="{{ route('partes-incendios.destroy', $parte) }}" 
-                                              method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                                    onclick="return confirm('¿Eliminar este parte?')">
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-parte-incendio"
+                                                data-id="{{ $parte->id }}"
+                                                data-numero="{{ $parte->emergency?->numero ?? '#'.str_pad($parte->numero_parte, 4, '0', STR_PAD_LEFT) }}"
+                                                title="Eliminar">
                                                 <i class="bi bi-trash"></i>
+                                                <span class="d-none d-md-inline ms-1">Eliminar</span>
                                             </button>
-                                        </form>
                                     @endif
                                 </div>
                             </td>
@@ -187,11 +185,52 @@
         </div>
     </div>
 </div>
+
+@if(auth()->user()->is_admin)
+<div class="modal fade" id="deleteParteIncendioModal" tabindex="-1" aria-labelledby="deleteParteIncendioModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteParteIncendioModalLabel">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de eliminar el parte de incendio <strong id="parteIncendioNumero"></strong>?</p>
+                <p class="text-danger mb-0"><small>Esta acción no se puede deshacer.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteParteIncendioForm" method="POST"
+                      action="{{ route('partes-incendios.destroy', ['partesIncendio' => '__PARTE_ID__']) }}"
+                      data-action="{{ route('partes-incendios.destroy', ['partesIncendio' => '__PARTE_ID__']) }}">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 @endsection
 
 @section('scripts')
 <script>
 $(document).ready(function() {
+    $('.delete-parte-incendio').click(function() {
+        const parteId = $(this).data('id');
+        const parteNumero = $(this).data('numero');
+
+        $('#parteIncendioNumero').text(parteNumero);
+        $('#deleteParteIncendioForm').attr(
+            'action',
+            $('#deleteParteIncendioForm').data('action').replace('__PARTE_ID__', parteId)
+        );
+        $('#deleteParteIncendioModal').modal('show');
+    });
+
     // Auto-ocultar alertas
     setTimeout(function() {
         $('.alert').alert('close');
