@@ -22,19 +22,9 @@ class EmergencyController extends Controller
         ]);
     }
 
-    private function parteUserRules(bool $requiredIfFinalizada): array
-    {
-        return [
-            $requiredIfFinalizada ? 'required_if:estado,finalizada' : 'nullable',
-            'nullable',
-            'integer',
-            Rule::exists('users', 'id')->where('is_admin', 0),
-        ];
-    }
-
     public function store(Request $request)
     {
-        $data = $this->validated($request) + $request->validate(['parte_user_id' => $this->parteUserRules(false)]);
+        $data = $this->validated($request);
         $vehicleIds = $this->validatedVehicles($request);
 
         $emergency = Emergency::create($data + [
@@ -66,20 +56,12 @@ class EmergencyController extends Controller
     {
         $data = $this->validated($request) + $request->validate([
             'estado' => ['required', Rule::in(array_keys(Emergency::ESTADOS))],
-            'parte_user_id' => $this->parteUserRules(true),
         ]);
         $vehicleIds = $this->validatedVehicles($request, $emergency);
 
-        if (
-            $emergency->parteIncendio()->exists()
-            && isset($data['parte_user_id'])
-            && (int) $data['parte_user_id'] !== (int) $emergency->parte_user_id
-        ) {
-            return back()->withErrors(['parte_user_id' => 'No se puede cambiar el usuario asignado después de crear el parte.'])->withInput();
-        }
-
-        if ($emergency->parteIncendio()->exists()) {
-            unset($data['parte_user_id']);
+        // El usuario del parte solo se asigna desde el dashboard (modal al finalizar).
+        if ($data['estado'] === 'finalizada' && ! $emergency->parte_user_id) {
+            return back()->withErrors(['estado' => 'Para finalizar la emergencia asigna el usuario del parte desde el dashboard.'])->withInput();
         }
 
         $emergency->update($data);

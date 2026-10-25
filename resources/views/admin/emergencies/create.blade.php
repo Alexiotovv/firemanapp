@@ -44,23 +44,13 @@
                 <div class="col-12"><label class="form-label">Estado</label>
                     <select name="estado" class="form-select" required>
                         @foreach($estados as $k => $label)
+                            @continue($k === 'finalizada' && $em->estado !== 'finalizada')
                             <option value="{{ $k }}" @selected(old('estado', $em->estado) === $k)>{{ $label }}</option>
                         @endforeach
                     </select>
+                    <div class="form-text">Para finalizar la emergencia y asignar quién completa el parte, usa el estado desde el dashboard.</div>
                 </div>
                 @endif
-                <div class="col-12">
-                    <label class="form-label">Usuario asignado (completará el parte)</label>
-                    <select name="parte_user_id" class="form-select" @required(old('estado', $em->estado ?? '') === 'finalizada')>
-                        <option value="">Selecciona un usuario</option>
-                        @foreach($users as $user)
-                            <option value="{{ $user->id }}" @selected((int) old('parte_user_id', $em->parte_user_id ?? 0) === $user->id)>
-                                {{ $user->compania }} - {{ $user->name }} {{ $user->apellidos }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="form-text">Al elegir un usuario se muestran sus vehículos disponibles.</div>
-                </div>
                 <div class="col-12"><label class="form-label">Dirección</label>                    <input name="direccion" class="form-control" value="{{ old('direccion', $em->direccion ?? '') }}" required maxlength="255" placeholder="Ej: Jr. Amazonas 123 - Punchana"></div>
                 <div class="col-12"><label class="form-label">Referencia</label>
                     <input name="referencia" class="form-control" value="{{ old('referencia', $em->referencia ?? '') }}" maxlength="255"></div>
@@ -112,28 +102,6 @@
 (() => {
     const DEFAULT = [-3.7491, -73.2538];
     const latEl = document.getElementById('lat'), lngEl = document.getElementById('lng'), info = document.getElementById('coords');
-    const stateSelect = document.querySelector('select[name="estado"]');
-    const userSelect = document.querySelector('select[name="parte_user_id"]');
-    const syncUserRequirement = () => {
-        if (stateSelect && userSelect) userSelect.required = stateSelect.value === 'finalizada';
-    };
-    stateSelect?.addEventListener('change', syncUserRequirement);
-    syncUserRequirement();
-    const filterVehicles = (clear) => {
-        const uid = userSelect?.value;
-        document.querySelectorAll('.veh-item').forEach(item => {
-            const show = !uid || item.dataset.user === uid;
-            if (!show && clear) item.querySelector('input').checked = false;
-            item.classList.toggle('d-none', !show);
-        });
-        document.querySelectorAll('.veh-group').forEach(g => {
-            let n = g.nextElementSibling, any = false;
-            while (n && n.classList.contains('veh-item')) { if (!n.classList.contains('d-none')) any = true; n = n.nextElementSibling; }
-            g.classList.toggle('d-none', !any);
-        });
-    };
-    userSelect?.addEventListener('change', () => filterVehicles(true));
-    filterVehicles(false);
     const map = L.map('pickMap').setView(DEFAULT, 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap'}).addTo(map);
     let marker = null;
